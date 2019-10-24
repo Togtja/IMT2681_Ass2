@@ -1,8 +1,6 @@
-package imt2681ass2
-
+package api
 import (
 	"time"
-	"strings"
 )
 
 //The time used to find the uptime of this program

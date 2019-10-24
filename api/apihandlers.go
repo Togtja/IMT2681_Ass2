@@ -1,4 +1,4 @@
-package imt2681ass2
+package api
 
 import (
 	"time"
@@ -39,9 +39,8 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 
 		uptime := uptime()
 		uptimeString := fmt.Sprintf("%.0f seconds", uptime.Seconds())
-		diag := Status{gitlab.StatusCode, db.StatusCode, uptimeString, Version}
+		diag := StatusDiag{gitlab.StatusCode, db.StatusCode, uptimeString, Version}
 		json.NewEncoder(w).Encode(diag)
-		fmt.Println("Sucsess??")
 		return
 	}
 	http.Error(w, "only get method allowed", http.StatusNotImplemented)

@@ -1,4 +1,4 @@
-package imt2681ass2
+package api
 
 type Repos struct{
 	Repos []Repo `json:"repos"`
@@ -19,7 +19,7 @@ type User struct{
 	username string `json:"username"`
 	count int `json:"count"`
 }
-type Status struct{
+type StatusDiag struct{
 	Gitlab int `json:"gitlab"`
 	Database int `json:"database"`
 	Uptime string `json:"uptime"`
