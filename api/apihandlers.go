@@ -64,37 +64,8 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 				//The API call has failed
 				return
 			}
-			var repos []Repo
-			//We have the project now we need to find the amout of commits for each
-			//project
-			var wg sync.WaitGroup
-			var m = &sync.Mutex{}
-			for i := range projects {
-				wg.Add(1)
-				//Do calls in multithreading
-				go func(i int) {
-					subquery := query + strconv.Itoa(projects[i].ID) + globals.GITREPO
-
-					var commits []Commit
-					if !apiGetCall(w, subquery, auth, &commits) {
-						//The API call has failed
-						return
-					}
-					projects[i].Commits = commits
-					//Make sure we don't append at the same time
-					m.Lock()
-					repos = append(repos, Repo{projects[i].Name, len(commits)})
-					m.Unlock()
-					//fmt.Println("We have recived data")
-					wg.Done()
-				}(i)
-			}
-			wg.Wait()
-			sort.SliceStable(repos, func(i, j int) bool {
-				return repos[i].Commits > repos[j].Commits
-			})
-
-			finalRepo.Repos = repos
+			//TODO: SUBCALLS
+			finalRepo.Repos = subAPICallsForCommits(projects, auth, w)
 			caching.CacheStruct(fileName, globals.REPODIR, finalRepo)
 		}
 		//Make sure we don't go to high
@@ -211,4 +182,37 @@ func findOffset(w http.ResponseWriter, r *http.Request) int64 {
 		http.Error(w, errmsg, http.StatusBadRequest)
 	}
 	return offset
+}
+func subAPICallsForCommits(projects []Project, auth string, w http.ResponseWriter) []Repo {
+	query := globals.GITAPI + "projects/"
+	var repos []Repo
+	//We have the project now we need to find the amout of commits for each
+	//project
+	var wg sync.WaitGroup
+	var m = &sync.Mutex{}
+	for i := range projects {
+		wg.Add(1)
+		//Do calls in multithreading
+		go func(i int) {
+			subquery := query + strconv.Itoa(projects[i].ID) + globals.GITREPO
+
+			var commits []Commit
+			if !apiGetCall(w, subquery, auth, &commits) {
+				//The API call has failed
+				return
+			}
+			projects[i].Commits = commits
+			//Make sure we don't append at the same time
+			m.Lock()
+			repos = append(repos, Repo{projects[i].Name, len(commits)})
+			m.Unlock()
+			//fmt.Println("We have recived data")
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+	sort.SliceStable(repos, func(i, j int) bool {
+		return repos[i].Commits > repos[j].Commits
+	})
+	return repos
 }
