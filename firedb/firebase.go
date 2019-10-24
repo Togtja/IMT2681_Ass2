@@ -1,13 +1,13 @@
 package firedb
-import (
-	"log"
-	"fmt"
-	"google.golang.org/api/option"
-	"firebase.google.com/go"  
-	"context"
-  )
-  
 
+import (
+	"context"
+	"fmt"
+	"log"
+
+	firebase "firebase.google.com/go"
+	"google.golang.org/api/option"
+)
 
 func init() {
 	ctx := context.Background()
@@ -17,17 +17,17 @@ func init() {
 	if err != nil {
 		fmt.Errorf("error initializing app: %v", err)
 		fmt.Println(err)
-		//return;
+		return
 	}
 	//fmt.Println(app)
 	client, err := app.Firestore(ctx)
 	if err != nil {
-		  log.Fatalln(err)
+		log.Fatalln(err)
 	}
 	fmt.Println(client)
-	
+
 	defer client.Close()
 }
-func Test(){
+func Test() {
 	fmt.Println("Test")
 }
