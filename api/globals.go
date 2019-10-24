@@ -13,7 +13,9 @@ const Version string = "v1"
 //GITAPI Root API Call
 const GITAPI string = "https://git.gvk.idi.ntnu.no/api/v4/"
 
-//
+//GITREPO used for repo calls
+const GITREPO string = "/repository/commits/"
+
 //EventMsg are an "enum" for Post request event
 type EventMsg string
 
