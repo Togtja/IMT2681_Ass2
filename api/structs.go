@@ -42,9 +42,9 @@ type Commit struct {
 
 //Project details concerning the project
 type Project struct {
-	ID      int      `json:"id"`
-	Name    string   `json:"name"`
-	Owner   []Owner  `json:"owner"`
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+	//Owner   []Owner  `json:"owner"`
 	Commits []Commit `json:"commits"`
 }
 
