@@ -1,4 +1,5 @@
 package api
+
 import (
 	"time"
 )
@@ -9,18 +10,20 @@ var startTime time.Time
 //Version of this current API
 const Version string = "v1"
 
-//Root API Call
+//GITAPI Root API Call
 const GITAPI string = "https://git.gvk.idi.ntnu.no/api/v4/"
 
+//
+//EventMsg are an "enum" for Post request event
 type EventMsg string
 
 const (
-	//The event is message
+	//CommitE a Commit Event
 	CommitE EventMsg = "commit"
-	//the event is languges
+	//LanguagesE a Language Event
 	LanguagesE EventMsg = "languages"
-	//The event is issues
+	//IssuesE a Issue Event
 	IssuesE EventMsg = "issues"
-	//The event is status
+	//StatusE a Status Event
 	StatusE EventMsg = "status"
 )
