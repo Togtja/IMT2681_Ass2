@@ -9,6 +9,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"../globals"
+
+	"../caching"
 )
 
 //NilHandler throws a Bad Request
@@ -29,36 +33,53 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		limit := findLimit(w, r)
 		offset := findOffset(w, r)
-		auth := r.FormValue("auth") //TODO: Validate this
-		fmt.Println(auth)
-		//TODO Cache all projects
-		var projects []Project
-		query := GITAPI + "projects/"
-		if !apicall(w, query, &projects) {
-			//The API call has failed
-			return
-		}
-		var repos []Repo
-		//We have the project now we need to find the amout of commits for each
-		//project
-		for i := range projects {
-			subquery := query + strconv.Itoa(projects[i].ID) + GITREPO
 
-			var commits []Commit
-			if !apicall(w, subquery, &commits) {
+		var finalRepo Repos
+		file := caching.FileExist(globals.REPOFILE, globals.REPODIR)
+		if file != nil {
+			//The gile exist
+			data, err := ioutil.ReadAll(file)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			json.Unmarshal(data, &finalRepo)
+			file.Close()
+			//We have no file
+		} else {
+
+			auth := r.FormValue("auth") //TODO: Validate this
+			fmt.Println(auth)
+			//TODO Cache all projects
+			var projects []Project
+			query := globals.GITAPI + "projects/"
+			if !apicall(w, query, &projects) {
 				//The API call has failed
 				return
 			}
-			fmt.Println("Commit nr for", projects[i].ID, "is:", len(commits))
-			projects[i].Commits = commits
-			repos = append(repos, Repo{projects[i].Name, len(commits)})
+			var repos []Repo
+			//We have the project now we need to find the amout of commits for each
+			//project
+			for i := range projects {
+				subquery := query + strconv.Itoa(projects[i].ID) + globals.GITREPO
+
+				var commits []Commit
+				if !apicall(w, subquery, &commits) {
+					//The API call has failed
+					return
+				}
+				projects[i].Commits = commits
+				repos = append(repos, Repo{projects[i].Name, len(commits)})
+			}
+			sort.SliceStable(repos, func(i, j int) bool {
+				return repos[i].Commits > repos[j].Commits
+			})
+
+			finalRepo.Repos = repos
+			finalRepo.Auth = false
+			caching.CacheStruct(globals.REPOFILE, globals.REPODIR, finalRepo)
 		}
-		sort.SliceStable(repos, func(i, j int) bool {
-			return repos[i].Commits > repos[j].Commits
-		})
-		var finalRepo Repos
-		finalRepo.Repos = repos[offset : limit+offset]
-		finalRepo.Auth = false
+		finalRepo.Repos = finalRepo.Repos[offset : limit+offset]
 		json.NewEncoder(w).Encode(finalRepo)
 
 		return
@@ -94,7 +115,7 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 
 		uptime := uptime()
 		uptimeString := fmt.Sprintf("%.0f seconds", uptime.Seconds())
-		diag := Status{gitlab.StatusCode, db.StatusCode, uptimeString, Version}
+		diag := Status{gitlab.StatusCode, db.StatusCode, uptimeString, globals.Version}
 		json.NewEncoder(w).Encode(diag)
 		return
 	}
@@ -104,12 +125,12 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 
 //Finds current uptime
 func uptime() time.Duration {
-	return time.Since(startTime)
+	return time.Since(globals.StartTime)
 }
 
 //Start the timer to figure out current uptime
 func init() {
-	startTime = time.Now()
+	globals.StartTime = time.Now()
 }
 
 func apicall(w http.ResponseWriter, getReq string, v interface{}) bool {
