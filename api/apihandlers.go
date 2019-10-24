@@ -19,7 +19,6 @@ import (
 
 //NilHandler throws a Bad Request
 func NilHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Default Handler: Invalid request received.")
 	http.Error(w, "Invalid request", http.StatusBadRequest)
 }
 
@@ -29,7 +28,6 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Header.Add(w.Header(), "content-type", "application/json")
 		parts := strings.Split(r.URL.Path, "/")
 		if len(parts) != 5 {
-			fmt.Println("Length is: ", len(parts))
 			http.Error(w, "Expecting format .../", http.StatusBadRequest)
 			return
 		}
@@ -47,10 +45,12 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 		fileName = fileName + globals.REPOFILE
 		file := caching.FileExist(fileName, globals.REPODIR)
 		if file != nil {
-			//The gile exist
+			//The file exist
 			data, err := ioutil.ReadAll(file)
 			if err != nil {
 				fmt.Println(err)
+				errmsg := "The Read of the response failed with error: " + err.Error()
+				http.Error(w, errmsg, http.StatusInternalServerError)
 				return
 			}
 			json.Unmarshal(data, &finalRepo)
@@ -64,7 +64,6 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 				//The API call has failed
 				return
 			}
-			//TODO: SUBCALLS
 			finalRepo.Repos = subAPICallsForCommits(projects, auth, w)
 			caching.CacheStruct(fileName, globals.REPODIR, finalRepo)
 		}
@@ -92,7 +91,6 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Header.Add(w.Header(), "content-type", "application/json")
 		parts := strings.Split(r.URL.Path, "/")
 		if len(parts) != 5 {
-			fmt.Println("Length is: ", len(parts))
 			http.Error(w, "Expecting format .../", http.StatusBadRequest)
 			return
 		}
@@ -102,16 +100,14 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, errmsg, http.StatusInternalServerError)
 			return
 		}
-
+		//TODO: FIX THIS
 		db, err := http.Get("https://restcountries.eu/rest/v2/")
 		if err != nil {
 			errmsg := "The HTTP request failed with error" + err.Error()
 			http.Error(w, errmsg, http.StatusInternalServerError)
 			return
 		}
-
-		uptime := uptime()
-		uptimeString := fmt.Sprintf("%.0f seconds", uptime.Seconds())
+		uptimeString := fmt.Sprintf("%.0f seconds", uptime().Seconds())
 		diag := Status{gitlab.StatusCode, db.StatusCode, uptimeString, globals.Version}
 		json.NewEncoder(w).Encode(diag)
 		return
@@ -206,7 +202,6 @@ func subAPICallsForCommits(projects []Project, auth string, w http.ResponseWrite
 			m.Lock()
 			repos = append(repos, Repo{projects[i].Name, len(commits)})
 			m.Unlock()
-			//fmt.Println("We have recived data")
 			wg.Done()
 		}(i)
 	}
