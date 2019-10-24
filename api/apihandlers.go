@@ -23,7 +23,7 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Expecting format .../", http.StatusBadRequest)
 			return
 		}
-		gitlab,	 err := http.Get("http://api.gbif.org/v1/")
+		gitlab,	 err := http.Get("https://git.gvk.idi.ntnu.no/api/v4/projects")
 		if err != nil {
 			http.Error(w, "The HTTP request failed with error", http.StatusInternalServerError)
 			fmt.Printf("The HTTP request failed with error %s\n", err)
