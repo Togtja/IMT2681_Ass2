@@ -1,6 +1,7 @@
 package globals
 
 import (
+	"strconv"
 	"time"
 )
 
@@ -19,6 +20,15 @@ const (
 	//DirFail directory failed to create
 	DirFail FileMsg = 4
 )
+
+//MAXPAGE how many pages (calls we are going to go through)
+const MAXPAGE int = 100
+
+//MAXPERPAGE how many result per page (max taken from gitlab API docs)
+const MAXPERPAGE int = 100
+
+//PAGEQ is the page query
+var PAGEQ string = "?per_page=" + strconv.Itoa(MAXPERPAGE) + "&page="
 
 //StartTime The time used to find the uptime of this program
 var StartTime time.Time
@@ -40,6 +50,9 @@ const GITREPO string = "/repository/commits/"
 
 //LANGQ the query used to find programmig languges
 const LANGQ string = "/languages/"
+
+//PROJQ the query used to find projects
+const PROJQ string = "projects/"
 
 //COMMITFILE is the file name where we store the repos and commits
 const COMMITFILE string = "_RepoAndCommits.json"
