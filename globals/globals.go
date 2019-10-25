@@ -26,17 +26,35 @@ var StartTime time.Time
 //Version of this current API
 const Version string = "v1"
 
+//PUBLIC prefix for public authentication
+const PUBLIC string = "public_"
+
 //GITAPI Root API Call
 const GITAPI string = "https://git.gvk.idi.ntnu.no/api/v4/"
 
 //GITREPO used for repo calls
 const GITREPO string = "/repository/commits/"
 
-//REPOFILE is the file name where we store the repos
-const REPOFILE string = "RepoAndCommits.json"
+//LANGQ the query used to find programmig languges
+const LANGQ string = "/languages/"
 
-//REPODIR is the directory it is stores
-const REPODIR string = "Repo"
+//COMMITFILE is the file name where we store the repos and commits
+const COMMITFILE string = "RepoAndCommits.json"
+
+//COMMITDIR is the directory it is stores the commit results
+const COMMITDIR string = "commitDir"
+
+//PROJIDFILE ProjectIDFIle is a json file of all project IDs
+const PROJIDFILE string = "project.json"
+
+//PROJIDDIR directory where the project files will be stored
+const PROJIDDIR string = "projectsIDDir"
+
+//LANGFILE the file name we store the languges data
+const LANGFILE string = "languges.Json"
+
+//LANGDIR the directory where we store the
+const LANGDIR string = "lang"
 
 //EventMsg are an "enum" for Post request event
 type EventMsg string

@@ -3,6 +3,7 @@ package caching
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"time"
 
@@ -82,7 +83,7 @@ func CacheStruct(filename string, dir string, v interface{}) {
 	file.Close()
 }
 
-//FileExist Sees if file exist, if it coes return it
+//FileExist Sees if file exist, if it does return it
 func FileExist(filename string, dir string) *os.File {
 	path := dir + "/" + filename
 	file, err := os.Open(path)
@@ -90,4 +91,15 @@ func FileExist(filename string, dir string) *os.File {
 		return nil
 	}
 	return file
+}
+
+//ReadFile read from file to struct
+func ReadFile(file *os.File, v interface{}) error {
+	data, err := ioutil.ReadAll(file)
+	if err != nil {
+		return err
+	}
+	json.Unmarshal(data, &v)
+	file.Close()
+	return err
 }
