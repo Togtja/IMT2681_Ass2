@@ -41,9 +41,14 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	limit = offset
-	offset = limit
-	//repo.Repos = repo.Repos[offset : limit+offset]
+	if limit+offset > int64(len(repo.Repos)) {
+		if offset >= int64(len(repo.Repos)) {
+			offset = 0
+		}
+		limit = int64(len(repo.Repos)) - offset
+
+	}
+	repo.Repos = repo.Repos[offset : limit+offset]
 	json.NewEncoder(w).Encode(repo)
 
 	return
@@ -83,9 +88,14 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	limit = offset
-	offset = limit
-	//repo.Repos = repo.Repos[offset : limit+offset]
+	if limit+offset > int64(len(lang.Language)) {
+		if offset >= int64(len(lang.Language)) {
+			offset = 0
+		}
+		limit = int64(len(lang.Language)) - offset
+
+	}
+	lang.Language = lang.Language[offset : limit+offset]
 	json.NewEncoder(w).Encode(lang)
 }
 
@@ -173,7 +183,7 @@ func findLimit(w http.ResponseWriter, r *http.Request) int64 {
 	}
 	if limit <= 0 {
 		//Default limit
-		limit = 5
+		limit = globals.DLIMIT
 	}
 	return limit
 }

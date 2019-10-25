@@ -26,6 +26,9 @@ var StartTime time.Time
 //Version of this current API
 const Version string = "v1"
 
+//DLIMIT is the default limit
+const DLIMIT int64 = 5
+
 //PUBLIC prefix for public authentication
 const PUBLIC string = "public_"
 
