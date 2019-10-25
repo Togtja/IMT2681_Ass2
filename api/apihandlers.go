@@ -27,7 +27,7 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 	repo.Auth = false
 	//Default public
 	commitFileName := globals.PUBLIC
-	auth := r.FormValue("auth") //TODO: is sorta done look at TODO furhter down
+	auth := r.FormValue("auth")
 	if auth != "" {
 		//Make a personal json file for authorized users
 		//Should be deleted after XX hours/Days
@@ -37,8 +37,8 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 		auth = globals.PUBLIC
 	}
 	commitFileName = commitFileName + globals.COMMITFILE
-	limit, offset, err := genericHandler(w, r, commitFileName, globals.COMMITDIR, &repo, auth)
-	if err != nil {
+	limit, offset, ok := genericHandler(w, r, commitFileName, globals.COMMITDIR, &repo, auth)
+	if ok == false {
 		return
 	}
 	if limit+offset > int64(len(repo.Repos)) {
@@ -74,7 +74,7 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 	var lang Lang
 	lang.Auth = false
 	langFileName := globals.PUBLIC
-	auth := r.FormValue("auth") //TODO: is sorta done look at TODO furhter down
+	auth := r.FormValue("auth")
 	if auth != "" {
 		//Make a personal json file for authorized users
 		//TODO: Should be deleted after XX hours/Days
@@ -84,8 +84,8 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 		auth = globals.PUBLIC
 	}
 	langFileName = langFileName + globals.LANGFILE
-	limit, offset, err := genericHandler(w, r, langFileName, globals.LANGDIR, &lang, auth)
-	if err != nil {
+	limit, offset, ok := genericHandler(w, r, langFileName, globals.LANGDIR, &lang, auth)
+	if ok == false {
 		return
 	}
 	if limit+offset > int64(len(lang.Language)) {
@@ -97,6 +97,21 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	lang.Language = lang.Language[offset : limit+offset]
 	json.NewEncoder(w).Encode(lang)
+}
+
+//IssueHandler handles issue request
+func IssueHandler(w http.ResponseWriter, r *http.Request) {
+	if !isCorrectRequest(w, r) {
+		return
+	}
+	_type := r.FormValue("type")
+	if _type == "users" {
+
+	} else if _type == "labels" {
+
+	} else {
+
+	}
 }
 
 //StatusHandler get status code from db/ external api and uptime and version for thid API
@@ -157,17 +172,24 @@ func apiGetCall(w http.ResponseWriter, getReq string, auth string, v interface{}
 		http.Error(w, errmsg, http.StatusInternalServerError)
 		return err
 	}
+	if resp.StatusCode == 404 {
+		return nil
+	}
+	if resp.StatusCode == 401 {
+		//Invalid auth
+		http.Error(w, "Invalid Authentication", http.StatusUnauthorized)
+	}
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		errmsg := "The Read of the response failed with error: " + err.Error()
 		http.Error(w, errmsg, http.StatusInternalServerError)
 		return err
 	}
-	//TODO: Figure out why it throws an umashal error when auth is valid
-	//TODO: Figure out why Owner is not accpeted
 	err = json.Unmarshal(data, &v)
 	if err != nil {
+		fmt.Println(request, "\n", v, resp)
 		errmsg := "The Unmarshal failed with error: " + err.Error()
+		errmsg = errmsg + "\n Possibly failed Authentication"
 		http.Error(w, errmsg, http.StatusInternalServerError)
 		return err
 	}
@@ -206,22 +228,32 @@ func subAPICallsForCommits(projects []Project, auth string, w http.ResponseWrite
 		wg.Add(1)
 		//Do calls in multithreading
 		go func(i int) {
-			subquery := query + strconv.Itoa(projects[i].ID) + globals.GITREPO
 
-			var commits []Commit
-			err := apiGetCall(w, subquery, auth, &commits)
-			if err != nil {
-				//The API call has failed
-				return
+			for j := 0; j < globals.MAXPAGE; j++ {
+
+				subquery := query + strconv.Itoa(projects[i].ID) + globals.GITREPO + globals.PAGEQ + strconv.Itoa(j+1)
+				var commits []Commit
+				err := apiGetCall(w, subquery, auth, &commits)
+				if err != nil {
+					//The API call has failed
+					wg.Done()
+					return
+				}
+				if len(commits) == 0 {
+					break
+				}
+				projects[i].Commits = append(projects[i].Commits, commits...)
+
 			}
-			projects[i].Commits = commits
 			//Make sure we don't append at the same time
+
 			m.Lock()
-			repos = append(repos, Repo{projects[i].Name, len(commits)})
+			repos = append(repos, Repo{projects[i].Name, len(projects[i].Commits)})
 			m.Unlock()
 			wg.Done()
 		}(i)
 	}
+	fmt.Println(&wg)
 	wg.Wait()
 	sort.SliceStable(repos, func(i, j int) bool {
 		return repos[i].Commits > repos[j].Commits
@@ -244,11 +276,12 @@ func subAPICallsForLang(projects []Project, auth string, w http.ResponseWriter) 
 		//Do calls in multithreading
 		go func(i int) {
 			subquery := query + strconv.Itoa(projects[i].ID) + globals.LANGQ
-
+			fmt.Println(subquery)
 			var v interface{}
 			err := apiGetCall(w, subquery, auth, &v)
 			if err != nil {
 				//The API call has failed
+				wg.Done()
 				return
 			}
 			data := v.(map[string]interface{})
@@ -289,22 +322,30 @@ func subAPICallsForLang(projects []Project, auth string, w http.ResponseWriter) 
 
 	return lang
 }
-func genericHandler(w http.ResponseWriter, r *http.Request, fileName string, fileDir string,
-	v interface{}, auth string) (limit int64, offset int64, err error) {
+func isCorrectRequest(w http.ResponseWriter, r *http.Request) bool {
 	if r.Method != http.MethodGet {
 		//There is only Get method to commits
 		http.Error(w, "only get method allowed", http.StatusNotImplemented)
-		return
+		return false
 	}
 	http.Header.Add(w.Header(), "content-type", "application/json")
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) != 5 {
 		http.Error(w, "Expecting format .../", http.StatusBadRequest)
-		return
+		return false
+	}
+	return true
+}
+
+//Work for commits and langugues
+func genericHandler(w http.ResponseWriter, r *http.Request, fileName string, fileDir string,
+	v interface{}, auth string) (int64, int64, bool) {
+	if !isCorrectRequest(w, r) {
+		return 0, 0, false
 	}
 	//Find the headers
-	limit = findLimit(w, r)
-	offset = findOffset(w, r)
+	limit := findLimit(w, r)
+	offset := findOffset(w, r)
 
 	file := caching.FileExist(fileName, fileDir)
 	if file != nil {
@@ -313,7 +354,7 @@ func genericHandler(w http.ResponseWriter, r *http.Request, fileName string, fil
 		if err != nil {
 			errmsg := "The Failed Reading from file with error" + err.Error()
 			http.Error(w, errmsg, http.StatusInternalServerError)
-			return limit, offset, err
+			return limit, offset, false
 		}
 		//We have no file
 	} else {
@@ -328,33 +369,46 @@ func genericHandler(w http.ResponseWriter, r *http.Request, fileName string, fil
 			if err != nil {
 				errmsg := "The Failed Reading from file with error" + err.Error()
 				http.Error(w, errmsg, http.StatusInternalServerError)
-				return limit, offset, err
+				return limit, offset, false
 			}
 
 		} else {
 			fmt.Println("We get here")
-			//Else we need to quary to get it
-			query := globals.GITAPI + "projects/"
-			err := apiGetCall(w, query, auth, &projects)
-			if err != nil {
-				//The API call has failed
-				return limit, offset, err
+			for i := 0; i < globals.MAXPAGE; i++ {
+				var subProj []Project
+				query := globals.GITAPI + globals.PROJQ + globals.PAGEQ + strconv.Itoa(i+1)
+				err := apiGetCall(w, query, auth, &subProj)
+				if err != nil {
+					//The API call has failed
+					return limit, offset, false
+				}
+				//When it's empty we no longer need to do calls
+				if len(subProj) == 0 {
+					fmt.Println("subProj is", len(subProj), "with query", query)
+					break
+				}
+				projects = append(projects, subProj...)
 			}
+			//Else we need to quary to get it
+
 			fmt.Println("But not here?")
 			caching.CacheStruct(projectFileName, globals.PROJIDDIR, projects)
 
 		}
-		repo, ok := v.(*Repos)
-		if ok {
+		repo, okR := v.(*Repos)
+		if okR {
 			repo.Repos = subAPICallsForCommits(projects, auth, w)
 			v = repo
 		}
-		lang, ok := v.(*Lang)
-		if ok {
+		lang, okL := v.(*Lang)
+		if okL {
 			lang.Language = subAPICallsForLang(projects, auth, w)
 			v = lang
 		}
+		if !okR && !okL {
+			return 0, 0, false
+		}
 		caching.CacheStruct(fileName, fileDir, v)
 	}
-	return
+	return limit, offset, true
 }
