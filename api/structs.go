@@ -18,10 +18,28 @@ type Lang struct {
 	Auth     bool     `json:"auth"`
 }
 
-//User Represent the user
+//Users represents the type=users
+type Users struct {
+	Users []User `json:"users"`
+	Auth  bool   `json:"auth"`
+}
+
+//User Represent the user count being num of issues
 type User struct {
 	Username string `json:"username"`
 	Count    int    `json:"count"`
+}
+
+//Labels represents the type =labels
+type Labels struct {
+	Labels []Label `json:"labels"`
+	Auth   bool    `json:"auth"`
+}
+
+//Label represent the labels and count being num of issues
+type Label struct {
+	Label string `json:"label"`
+	Count int    `json:"count"`
 }
 
 //Status is the diganostic and status tools
