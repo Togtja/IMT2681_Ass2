@@ -187,7 +187,6 @@ func apiGetCall(w http.ResponseWriter, getReq string, auth string, v interface{}
 	}
 	err = json.Unmarshal(data, &v)
 	if err != nil {
-		fmt.Println(request, "\n", v, resp)
 		errmsg := "The Unmarshal failed with error: " + err.Error()
 		errmsg = errmsg + "\n Possibly failed Authentication"
 		http.Error(w, errmsg, http.StatusInternalServerError)
@@ -253,7 +252,6 @@ func subAPICallsForCommits(projects []Project, auth string, w http.ResponseWrite
 			wg.Done()
 		}(i)
 	}
-	fmt.Println(&wg)
 	wg.Wait()
 	sort.SliceStable(repos, func(i, j int) bool {
 		return repos[i].Commits > repos[j].Commits
@@ -276,7 +274,6 @@ func subAPICallsForLang(projects []Project, auth string, w http.ResponseWriter) 
 		//Do calls in multithreading
 		go func(i int) {
 			subquery := query + strconv.Itoa(projects[i].ID) + globals.LANGQ
-			fmt.Println(subquery)
 			var v interface{}
 			err := apiGetCall(w, subquery, auth, &v)
 			if err != nil {
@@ -373,7 +370,7 @@ func genericHandler(w http.ResponseWriter, r *http.Request, fileName string, fil
 			}
 
 		} else {
-			fmt.Println("We get here")
+			//Else we need to query to get it
 			for i := 0; i < globals.MAXPAGE; i++ {
 				var subProj []Project
 				query := globals.GITAPI + globals.PROJQ + globals.PAGEQ + strconv.Itoa(i+1)
@@ -384,14 +381,10 @@ func genericHandler(w http.ResponseWriter, r *http.Request, fileName string, fil
 				}
 				//When it's empty we no longer need to do calls
 				if len(subProj) == 0 {
-					fmt.Println("subProj is", len(subProj), "with query", query)
 					break
 				}
 				projects = append(projects, subProj...)
 			}
-			//Else we need to quary to get it
-
-			fmt.Println("But not here?")
 			caching.CacheStruct(projectFileName, globals.PROJIDDIR, projects)
 
 		}
