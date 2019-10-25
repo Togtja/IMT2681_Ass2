@@ -30,7 +30,7 @@ const Version string = "v1"
 const DLIMIT int64 = 5
 
 //PUBLIC prefix for public authentication
-const PUBLIC string = "public_"
+const PUBLIC string = "public"
 
 //GITAPI Root API Call
 const GITAPI string = "https://git.gvk.idi.ntnu.no/api/v4/"
@@ -42,19 +42,19 @@ const GITREPO string = "/repository/commits/"
 const LANGQ string = "/languages/"
 
 //COMMITFILE is the file name where we store the repos and commits
-const COMMITFILE string = "RepoAndCommits.json"
+const COMMITFILE string = "_RepoAndCommits.json"
 
 //COMMITDIR is the directory it is stores the commit results
 const COMMITDIR string = "commitDir"
 
 //PROJIDFILE ProjectIDFIle is a json file of all project IDs
-const PROJIDFILE string = "project.json"
+const PROJIDFILE string = "_project.json"
 
 //PROJIDDIR directory where the project files will be stored
 const PROJIDDIR string = "projectsIDDir"
 
 //LANGFILE the file name we store the languges data
-const LANGFILE string = "languges.Json"
+const LANGFILE string = "_languges.Json"
 
 //LANGDIR the directory where we store the
 const LANGDIR string = "lang"

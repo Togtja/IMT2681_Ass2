@@ -32,7 +32,7 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 		//Make a personal json file for authorized users
 		//Should be deleted after XX hours/Days
 		repo.Auth = true
-		commitFileName = auth + "_"
+		commitFileName = auth
 	} else {
 		auth = globals.PUBLIC
 	}
@@ -79,7 +79,7 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 		//Make a personal json file for authorized users
 		//TODO: Should be deleted after XX hours/Days
 		lang.Auth = true
-		langFileName = auth + "_"
+		langFileName = auth
 	} else {
 		auth = globals.PUBLIC
 	}
@@ -144,7 +144,6 @@ func init() {
 func apiGetCall(w http.ResponseWriter, getReq string, auth string, v interface{}) error {
 	client := &http.Client{}
 	request, err := http.NewRequest("GET", getReq, nil)
-
 	if err != nil {
 		errmsg := "The HTTP request failed with error: " + err.Error()
 		http.Error(w, errmsg, http.StatusInternalServerError)
