@@ -1,11 +1,14 @@
 # Web Service Specification
 
 ## Implimented Webhooks
+
 /repocheck/v1/commits{?limit=[0-9]+{&auth=<access-token>}}
 /repocheck/v1/languages{?limit=[0-9]+{&auth=<access-token>}}
 /repocheck/v1/status
 /repocheck/v1/webhooks
+
 ## Todo:
+
 /repocheck/v1/issues{?type=(users|labels){&auth=<access-token>}}
 
 # Commits
