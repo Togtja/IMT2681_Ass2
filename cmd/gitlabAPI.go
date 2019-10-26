@@ -22,6 +22,8 @@ func main() {
 	http.HandleFunc("/repocheck/v1/languages/", api.LangHandler)
 	//http.HandleFunc("/repocheck/v1/issues/", imt2681ass2.CountryHandler)
 	http.HandleFunc("/repocheck/v1/status/", api.StatusHandler)
+	http.HandleFunc("/repocheck/v1/webhooks/", api.WebhookHandler)
 
 	log.Fatal(http.ListenAndServe(":"+port, nil))
+	defer firedb.Client.Close()
 }

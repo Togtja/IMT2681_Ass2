@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,8 +13,11 @@ import (
 	"time"
 
 	"../globals"
+	"google.golang.org/api/iterator"
 
 	"../caching"
+
+	"../firedb"
 )
 
 //NilHandler throws a Bad Request
@@ -146,6 +150,129 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
+//WebhookHandler the handler for webhooks
+func WebhookHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodPost:
+		iter := firedb.Client.Collection("webhooks").Documents(firedb.Ctx)
+		var ids []int
+		for {
+			doc, err := iter.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				return
+			}
+			//Should be no errors, as the ID is a string that we insert
+			id, _ := strconv.Atoi(doc.Ref.ID)
+			ids = append(ids, id)
+		}
+		// Expects incoming body in terms of WebhookRegistration struct
+		var newid int
+		sort.Ints(ids)
+		newid = 1
+		for i, id := range ids {
+			if id == newid {
+				newid++
+				fmt.Println(i+1, "==", len(ids))
+				if i+1 == len(ids) {
+					//We found no avaliable spots in the list add a new one
+				}
+			} else {
+				//We found an unused id
+				break
+			}
+		}
+		var webhook Webhook
+		err := json.NewDecoder(r.Body).Decode(&webhook)
+		if err != nil {
+			http.Error(w, "Something went wrong: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		//Check to see if user tried to tamper
+		if webhook.ID != "" {
+			//User tried to supply id
+			http.Error(w, "Id is automaticly given, try without suplying id", http.StatusBadRequest)
+			return
+		}
+		if webhook.Event == "" || webhook.URL == "" {
+			http.Error(w, "Please provide both event and url", http.StatusBadRequest)
+			return
+		}
+		webhook.ID = strconv.Itoa(newid)
+		webhook.Time = time.Now().String()
+		_, err = firedb.Client.Collection("webhooks").Doc(strconv.Itoa(newid)).Set(firedb.Ctx, webhook)
+		if err != nil {
+			http.Error(w, "Bad request", http.StatusBadRequest)
+			return
+		}
+
+	case http.MethodGet:
+		http.Header.Add(w.Header(), "content-type", "application/json")
+		parts := strings.Split(r.URL.Path, "/")
+		if len(parts) != 5 {
+			http.Error(w, "Expecting format webhooks/<id>", http.StatusBadRequest)
+			return
+		}
+		if parts[4] != "" {
+			id, err := strconv.Atoi(parts[4])
+			if err != nil {
+				http.Error(w, "Could not turn id into a integer", http.StatusBadRequest)
+				return
+			}
+			doc, err := firedb.Client.Collection("webhooks").Doc(strconv.Itoa(id)).Get(firedb.Ctx)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			m := doc.Data()
+			//Create and Encode the struct
+			var event, time string = fmt.Sprint(m["event"]), fmt.Sprint(m["time"])
+			json.NewEncoder(w).Encode(WebhookGet{id, event, time})
+			return
+		}
+		// For now just return all webhooks, don't respond to specific resource requests
+		iter := firedb.Client.Collection("webhooks").Documents(firedb.Ctx)
+		var webhooks []WebhookGet
+		for {
+			doc, err := iter.Next()
+			if err == iterator.Done {
+				break
+			}
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
+			m := doc.Data()
+			var id, event, time string = fmt.Sprint(m["id"]), fmt.Sprint(m["event"]), fmt.Sprint(m["time"])
+			wid, _ := strconv.Atoi(id)
+			webhooks = append(webhooks, WebhookGet{wid, event, time})
+
+		}
+		json.NewEncoder(w).Encode(webhooks)
+	default:
+		http.Error(w, "Invalid method "+r.Method, http.StatusBadRequest)
+	}
+	fmt.Println("Left webhook")
+	return
+}
+func activateWebhook(event globals.EventMsg) error {
+	iter := firedb.Client.Collection("webhooks").Where("event", "==", event).Documents(firedb.Ctx)
+	for {
+		doc, err := iter.Next()
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			return err
+		}
+		//TODO: Send granted request
+		fmt.Println(doc.Data())
+	}
+	return nil
+}
+
 //Finds current uptime
 func uptime() time.Duration {
 	return time.Since(globals.StartTime)
@@ -163,6 +290,7 @@ func apiGetCall(w http.ResponseWriter, getReq string, auth string, v interface{}
 		errmsg := "The HTTP request failed with error: " + err.Error()
 		http.Error(w, errmsg, http.StatusInternalServerError)
 	}
+	//Set authentication if there is one
 	if auth != globals.PUBLIC {
 		request.Header.Set("Private-Token", auth)
 	}
@@ -172,12 +300,16 @@ func apiGetCall(w http.ResponseWriter, getReq string, auth string, v interface{}
 		http.Error(w, errmsg, http.StatusInternalServerError)
 		return err
 	}
+	//Some APIcall when calling for commits return a 404,
+	//However, I don't want to throw taht error due to 99% of them working
+	//It's pointles, but the API call return empty handed
 	if resp.StatusCode == 404 {
 		return nil
 	}
+	//Invalid authentication
 	if resp.StatusCode == 401 {
-		//Invalid auth
 		http.Error(w, "Invalid Authentication", http.StatusUnauthorized)
+		return errors.New("Invalid Authentication in API call")
 	}
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -334,7 +466,7 @@ func isCorrectRequest(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-//Work for commits and langugues
+//Works for commits and langugues
 func genericHandler(w http.ResponseWriter, r *http.Request, fileName string, fileDir string,
 	v interface{}, auth string) (int64, int64, bool) {
 	if !isCorrectRequest(w, r) {

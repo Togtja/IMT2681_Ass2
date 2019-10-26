@@ -73,3 +73,18 @@ type Owner struct {
 	Username string `json:"username"`
 	State    string `json:"state"`
 }
+
+//Webhook the structure of an webhook in db
+type Webhook struct {
+	ID    string `json:"id"`
+	Event string `json:"event"`
+	URL   string `json:"url"`
+	Time  string `json:"time"`
+}
+
+//WebhookGet the webhook a user get when calling for a GET method
+type WebhookGet struct {
+	ID    int    `json:"id"`
+	Event string `json:"event"`
+	Time  string `json:"time"`
+}

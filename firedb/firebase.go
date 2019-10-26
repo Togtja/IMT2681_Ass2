@@ -3,31 +3,37 @@ package firedb
 import (
 	"context"
 	"fmt"
-	"log"
 
+	"cloud.google.com/go/firestore"
 	firebase "firebase.google.com/go"
 	"google.golang.org/api/option"
 )
 
+//Ctx the contect of the firebase client
+var Ctx context.Context
+
+//Client the firestore clinet
+var Client *firestore.Client
+
 func init() {
-	ctx := context.Background()
-	opt := option.WithCredentialsFile("/home/tomas/Documents/Programming/2019NTNU_Sem5/GoTime/IMT2681_Ass2/firedb/servicekey.json")
+	Ctx = context.Background()
+	opt := option.WithCredentialsFile("firedb/servicekey.json")
 	//fmt.Println(opt)
-	app, err := firebase.NewApp(ctx, nil, opt)
+	app, err := firebase.NewApp(Ctx, nil, opt)
 	if err != nil {
-		fmt.Errorf("error initializing app: %v", err)
-		fmt.Println(err)
+		fmt.Println("error initializing app:", err)
 		return
 	}
 	//fmt.Println(app)
-	client, err := app.Firestore(ctx)
+	Client, err = app.Firestore(Ctx)
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Println("error initializing app:", err)
 	}
-	fmt.Println(client)
+	fmt.Println(Client)
 
-	defer client.Close()
 }
+
+//Test TODO:Delete this
 func Test() {
 	fmt.Println("Test")
 }
