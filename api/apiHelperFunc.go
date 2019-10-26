@@ -251,7 +251,7 @@ func genericHandler(w http.ResponseWriter, r *http.Request, fileName string, fil
 		projectFileName := auth + globals.PROJIDFILE
 		var projects []Project
 		//First see if project already exist
-		file := caching.FileExist(fileName, fileDir)
+		file := caching.FileExist(projectFileName, globals.PROJIDDIR)
 		if file != nil {
 			//The file exist
 			//We read from file
@@ -261,7 +261,6 @@ func genericHandler(w http.ResponseWriter, r *http.Request, fileName string, fil
 				http.Error(w, errmsg, http.StatusInternalServerError)
 				return limit, offset, false
 			}
-
 		} else {
 			//Else we need to query to get it
 			for i := 0; i < globals.MAXPAGE; i++ {
