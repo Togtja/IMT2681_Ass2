@@ -175,15 +175,21 @@ func subAPICallsForLang(projects []Project, auth string, w http.ResponseWriter) 
 				return
 			}
 			data := v.(map[string]interface{})
-			var higest float64 = 0
 			var language string = ""
 			for k, v := range data {
-				switch v := v.(type) {
+				switch v.(type) {
 				case float64:
-					if v > higest {
-						higest = v
-						language = k
+					language = k
+					//Make sure we don't append at the same time
+					m.Lock()
+					dupFreq[language]++
+					//If it is the first time we seen it
+					if dupFreq[language] == 1 {
+
+						lang = append(lang, language)
 					}
+					m.Unlock()
+
 				default:
 					continue
 				}
@@ -192,15 +198,7 @@ func subAPICallsForLang(projects []Project, auth string, w http.ResponseWriter) 
 				wg.Done()
 				return
 			}
-			//Make sure we don't append at the same time
-			m.Lock()
-			dupFreq[language]++
-			//If it is the first time we seen it
-			if dupFreq[language] == 1 {
 
-				lang = append(lang, language)
-			}
-			m.Unlock()
 			wg.Done()
 		}(i)
 	}
