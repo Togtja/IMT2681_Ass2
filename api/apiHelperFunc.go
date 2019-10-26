@@ -298,3 +298,19 @@ func genericHandler(w http.ResponseWriter, r *http.Request, fileName string, fil
 	}
 	return limit, offset, true
 }
+
+//EventOK Checks if the webhooks are valid
+func EventOK(event string) bool {
+	switch event {
+	case string(globals.CommitE):
+		return true
+	case string(globals.LanguagesE):
+		return true
+	case string(globals.IssuesE):
+		return true
+	case string(globals.StatusE):
+		return true
+	default:
+		return false
+	}
+}
