@@ -59,8 +59,11 @@ The endpoint accept GET requests. If the payload is empty, it returns top-rankin
 If a payload is specified, only the listed repositories be considered when identifying the top-ranking languages. The payload format is as an array of project names, i.e., :
 
 ```
-[ "project1", "project2", ... ]
+{
+    "projects": [ "project1", "project2", ... ]
+}
 ```
+(project names are the 'name' field in https://git.gvk.idi.ntnu.no/api/v4/projects)
 ## Response
 
 Calls to the endpoint produce output according to the following JSON schema specification and list the most frequently ranked languages (based on returned ranking for the individual projects):
@@ -168,6 +171,20 @@ Upon being triggered in the endpoint associated with the event the webhook is re
 ## Deletion (Todo)
 
 To delete a webhook, send a DELETE request to the URL identifying the webhook (resource id) to be deleted.
-# Diviation from requiretment
+# Diviation/Changes from assigment requiretment
+
+Specified Languges payload to be
+```
+{
+    "projects": [ "project1", "project2", ... ]
+}
+```
+and that project names assums 'name' field in https://git.gvk.idi.ntnu.no/api/v4/projects
+
+instead of just
+```
+ [ "project1", "project2", ... ]
+```
+
 
 Instead of responding with just the ID when you create a webook, I respone with the entire date for the webhook as a JSON format. This is done in purpouse, becuase I belive this makes more sense
