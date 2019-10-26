@@ -60,18 +60,9 @@ type Commit struct {
 
 //Project details concerning the project
 type Project struct {
-	ID   int    `json:"id"`
-	Name string `json:"name"`
-	//Owner   []Owner  `json:"owner"`
+	ID      int      `json:"id"`
+	Name    string   `json:"path_with_namespace"`
 	Commits []Commit `json:"commits"`
-}
-
-//Owner details about the owner of a Project
-type Owner struct {
-	ID       int    `json:"id"`
-	Name     string `json:"name"`
-	Username string `json:"username"`
-	State    string `json:"state"`
 }
 
 //Webhook the structure of an webhook in db
