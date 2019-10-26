@@ -13,6 +13,36 @@ import (
 //ShouldFileCache Check if a file should be cached
 //(it will create a file if it does not exist from before)
 func ShouldFileCache(filename string, dir string) (globals.FileMsg, *os.File) {
+	status, file := CreateFile(filename, dir)
+	//If it doesn't exist we have either created it or
+	//returned a nil
+	path := dir + "/" + filename
+	if status != globals.Exist {
+		return status, file
+	}
+
+	//The file exist and we need to see how old it is
+	info, err := os.Stat(path)
+	if err != nil {
+		fmt.Println(err)
+		return globals.Error, nil
+	}
+	mtime := info.ModTime()
+	fmt.Println("Last changed:", mtime)
+	timenow := time.Now()
+	fmt.Println("Time now:", timenow)
+	fmt.Println("Is", timenow.Sub(mtime).Hours(), "larger than", 24, "?")
+	//Does not care for timezones btw
+	if timenow.Sub(mtime).Hours() > 24 {
+		fmt.Println("Cache is old, Run Update")
+		return DeleteFile(filename, dir)
+	}
+	fmt.Println("Cache is recent, No need to update")
+	return globals.Exist, file
+}
+
+//CreateFile creates file in directory a file
+func CreateFile(filename string, dir string) (globals.FileMsg, *os.File) {
 	path := dir + "/" + filename
 	file, err := os.Open(path)
 	if err != nil {
@@ -35,34 +65,6 @@ func ShouldFileCache(filename string, dir string) (globals.FileMsg, *os.File) {
 		fmt.Println("file created")
 		return globals.Created, file
 	}
-
-	//The file exist and we need to see how old it is
-	info, err := os.Stat(path)
-	if err != nil {
-		fmt.Println(err)
-		return globals.Error, nil
-	}
-	mtime := info.ModTime()
-	fmt.Println("Last changed:", mtime)
-	timenow := time.Now()
-	fmt.Println("Time now:", timenow)
-	fmt.Println("Is", timenow.Sub(mtime).Hours(), "larger than", 24, "?")
-	//Does not care for timezones btw
-	if timenow.Sub(mtime).Hours() > 24 {
-		fmt.Println("Cache is old, Run Update")
-		err := os.Remove(path)
-		if err != nil {
-			fmt.Println(err)
-			return globals.Error, nil
-		}
-		file, err = os.Create(path)
-		if err != nil {
-			fmt.Println(err)
-			return globals.Error, nil
-		}
-		return globals.OldRenew, file
-	}
-	fmt.Println("Cache is recent, No need to update")
 	return globals.Exist, file
 }
 
@@ -102,4 +104,20 @@ func ReadFile(file *os.File, v interface{}) error {
 	json.Unmarshal(data, &v)
 	file.Close()
 	return err
+}
+
+//DeleteFile Given a filename and dir
+func DeleteFile(filename string, dir string) (globals.FileMsg, *os.File) {
+	path := dir + "/" + filename
+	err := os.Remove(path)
+	if err != nil {
+		fmt.Println(err)
+		return globals.Error, nil
+	}
+	file, err := os.Create(path)
+	if err != nil {
+		fmt.Println(err)
+		return globals.Error, nil
+	}
+	return globals.OldRenew, file
 }
