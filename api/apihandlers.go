@@ -149,6 +149,7 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
+		//Finds all the current ids
 		iter := firedb.Client.Collection("webhooks").Documents(firedb.Ctx)
 		var ids []int
 		for {
@@ -163,17 +164,13 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 			id, _ := strconv.Atoi(doc.Ref.ID)
 			ids = append(ids, id)
 		}
-		// Expects incoming body in terms of WebhookRegistration struct
+		//Finds a new ID (ID's starts from 1)
 		var newid int
 		sort.Ints(ids)
 		newid = 1
-		for i, id := range ids {
+		for _, id := range ids {
 			if id == newid {
 				newid++
-				fmt.Println(i+1, "==", len(ids))
-				if i+1 == len(ids) {
-					//We found no avaliable spots in the list add a new one
-				}
 			} else {
 				//We found an unused id
 				break
@@ -185,14 +182,14 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Something went wrong: "+err.Error(), http.StatusBadRequest)
 			return
 		}
-		//Check to see if user tried to tamper
-		if webhook.ID != "" {
-			//User tried to supply id
-			http.Error(w, "Id is automaticly given, try without suplying id", http.StatusBadRequest)
-			return
-		}
 		if webhook.Event == "" || webhook.URL == "" {
 			http.Error(w, "Please provide both event and url", http.StatusBadRequest)
+			return
+		}
+		//Some form of type cheking
+		webhook.Event = strings.ToLower(webhook.Event)
+		if !EventOK(webhook.Event) {
+			http.Error(w, "Please provide an event of type (commits|languages|issues|status)", http.StatusBadRequest)
 			return
 		}
 		webhook.ID = strconv.Itoa(newid)
@@ -202,6 +199,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
+		json.NewEncoder(w).Encode(webhook)
 
 	case http.MethodGet:
 		http.Header.Add(w.Header(), "content-type", "application/json")
@@ -223,7 +221,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			m := doc.Data()
 			//Create and Encode the struct
-			var event, time string = fmt.Sprint(m["event"]), fmt.Sprint(m["time"])
+			var event, time string = fmt.Sprint(m["Event"]), fmt.Sprint(m["Time"])
 			json.NewEncoder(w).Encode(WebhookGet{id, event, time})
 			return
 		}
@@ -240,15 +238,16 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			m := doc.Data()
-			var id, event, time string = fmt.Sprint(m["id"]), fmt.Sprint(m["event"]), fmt.Sprint(m["time"])
+			var id, event, time string = fmt.Sprint(m["ID"]), fmt.Sprint(m["Event"]), fmt.Sprint(m["Time"])
 			wid, _ := strconv.Atoi(id)
 			webhooks = append(webhooks, WebhookGet{wid, event, time})
 
 		}
 		json.NewEncoder(w).Encode(webhooks)
+	case http.MethodDelete:
+		//TODO: Do deleting stuff
 	default:
 		http.Error(w, "Invalid method "+r.Method, http.StatusBadRequest)
 	}
-	fmt.Println("Left webhook")
 	return
 }
