@@ -60,9 +60,9 @@ type Commit struct {
 
 //Project details concerning the project
 type Project struct {
-	ID      int      `json:"id"`
-	Name    string   `json:"path_with_namespace"`
-	Commits []Commit `json:"commits"`
+	ID       int      `json:"id"`
+	NamePath string   `json:"path_with_namespace"`
+	Commits  []Commit `json:"commits"`
 }
 
 //Webhook the structure of an webhook in db

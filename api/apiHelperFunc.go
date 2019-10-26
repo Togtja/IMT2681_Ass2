@@ -140,7 +140,7 @@ func subAPICallsForCommits(projects []Project, auth string, w http.ResponseWrite
 			//Make sure we don't append at the same time
 
 			m.Lock()
-			repos = append(repos, Repo{projects[i].Name, len(projects[i].Commits)})
+			repos = append(repos, Repo{projects[i].NamePath, len(projects[i].Commits)})
 			m.Unlock()
 			wg.Done()
 		}(i)
