@@ -78,8 +78,54 @@ Calls to the endpoint produce output according to the following JSON schema spec
   "auth": true // true or false indicating whether the call has been made with our without authentication
 }
 ```
-# Issues (TODO)
+# Issues 
+This endpoint will return the name of the users or labels (see parameters) for the attached to the most issues for a given project.  
 
+## Request (Todo)
+
+The endpoint should accept GET requests with the following payload:
+
+```
+{
+  "project": "project name" // name of the project whose issues are analysed
+}
+```
+
+The parameter `type` indicates whether users with the most posted issues (value `users`), or the most frequently referred labels (value `labels`) should be returned. If not specified, a corresponding error and status code should be returned.
+
+If not specified in the `auth` parameter, the request should occur without authentication.
+
+## Response
+
+Calls to the endpoint produce output according to the following JSON schema specification:
+
+If `type=users` is queried, the return format should look as follows:
+
+```
+{ 
+   "users": [
+              {
+                 "username": "username1",
+                 "count": count // count of issues by user
+               },
+               ... ],
+   "auth": true // true or false indicating whether the call has been made with our without authentication
+}
+```
+
+If `type=labels` is queried, the return format should look as follows:
+
+```
+{ 
+   "labels": [
+               {
+                 "label": "label1",
+                 "count": count // count of issues with label
+               },
+               ... ],
+   "auth": true // true or false indicating whether the call has been made with our without authentication
+}
+```
 # Status
 
 The status endpoint returns information about availability of invoked service and database connectivity.
@@ -194,3 +240,10 @@ instead of just
 The invocation gives a string array of the diffrent parameters, instead of a string
 
 Instead of responding with just the ID when you create a webook, I respone with the entire date for the webhook as a JSON format. This is done in purpouse, becuase I belive this makes more sense
+
+In issues:
+```
+The parameter `type` indicates whether users with the most labels
+```
+changed to:
+The parameter `type` indicates whether users with the most posted issues, as that is how I interpreted it, because the original did not make sense to me
