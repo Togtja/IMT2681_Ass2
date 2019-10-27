@@ -53,6 +53,12 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 	repo.Repos = repo.Repos[offset : limit+offset]
 	json.NewEncoder(w).Encode(repo)
 
+	param := []string{strconv.FormatInt(limit, 10), strconv.FormatInt(offset, 10), strconv.FormatBool(repo.Auth)}
+	err := activateWebhook(globals.CommitE, param)
+	if err != nil {
+		//No need to throw a webhook error to user, so just print it for sys admin
+		fmt.Println("Some error involving activating webhook:", err)
+	}
 	return
 
 }
@@ -90,6 +96,12 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 	lang.Language = lang.Language[offset : limit+offset]
 	json.NewEncoder(w).Encode(lang)
 
+	param := []string{strconv.FormatInt(limit, 10), strconv.FormatInt(offset, 10), strconv.FormatBool(lang.Auth)}
+	err := activateWebhook(globals.LanguagesE, param)
+	if err != nil {
+		//No need to throw a webhook error to user, so just print it for sys admin
+		fmt.Println("Some error involving activating webhook:", err)
+	}
 }
 
 //IssueHandler handles issue request
@@ -135,6 +147,12 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 	uptimeString := fmt.Sprintf("%.0f seconds", uptime().Seconds())
 	diag := Status{gitlab.StatusCode, db.StatusCode, uptimeString, globals.Version}
 	json.NewEncoder(w).Encode(diag)
+	var param []string //Empty parameters, as Status does not take in parameters
+	err = activateWebhook(globals.StatusE, param)
+	if err != nil {
+		//No need to throw a webhook error to user, so just print it for sys admin
+		fmt.Println("Some error involving activating webhook:", err)
+	}
 	return
 
 }
