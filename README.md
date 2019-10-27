@@ -167,7 +167,7 @@ Upon being triggered in the endpoint associated with the event the webhook is re
 ```
 {
   "event": "eventtype", // event type as per specification for registration
-  "params": "parameters" // parameters passed along in triggering request
+  "params": ["param1", "param2"] // parameters passed along in triggering request
   "time": "timestamp" // timestamp of request
 }
 ```
@@ -190,5 +190,6 @@ instead of just
  [ "project1", "project2", ... ]
 ```
 
+The invocation gives a string array of the diffrent parameters, instead of a string
 
 Instead of responding with just the ID when you create a webook, I respone with the entire date for the webhook as a JSON format. This is done in purpouse, becuase I belive this makes more sense
