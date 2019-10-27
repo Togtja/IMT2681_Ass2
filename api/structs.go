@@ -23,6 +23,17 @@ type LangPayload struct {
 	ProjectName []string `json:"projects"`
 }
 
+//Issue The struct of an issue in issues
+type Issue struct {
+	Labels []string `json:"labels"`
+	Author Author   `json:"author"`
+}
+
+//Author struct of a author in issues
+type Author struct {
+	Username string `json:"username"`
+}
+
 //Users represents the type=users
 type Users struct {
 	Users []User `json:"users"`
@@ -35,7 +46,7 @@ type User struct {
 	Count    int    `json:"count"`
 }
 
-//Labels represents the type =labels
+//Labels represents the type=labels
 type Labels struct {
 	Labels []Label `json:"labels"`
 	Auth   bool    `json:"auth"`
