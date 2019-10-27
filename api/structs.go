@@ -18,6 +18,11 @@ type Lang struct {
 	Auth     bool     `json:"auth"`
 }
 
+//LangPayload the expected payload for Lang Get Metohd
+type LangPayload struct {
+	ProjectName []string `json:"projects"`
+}
+
 //Users represents the type=users
 type Users struct {
 	Users []User `json:"users"`
@@ -62,6 +67,7 @@ type Commit struct {
 type Project struct {
 	ID       int      `json:"id"`
 	NamePath string   `json:"path_with_namespace"`
+	Name     string   `json:"name"`
 	Commits  []Commit `json:"commits"`
 }
 
