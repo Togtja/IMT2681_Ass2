@@ -109,11 +109,31 @@ func IssueHandler(w http.ResponseWriter, r *http.Request) {
 	if !isGetRequest(w, r) {
 		return
 	}
+	var authBool bool
+	auth := r.FormValue("auth")
+	if auth != "" {
+		//Make a personal json file for authorized users
+		//Should be deleted after XX hours/Days
+		authBool = true
+	} else {
+		auth = globals.PUBLIC
+		authBool = false
+	}
+	projid := r.FormValue("projID")
+	_, err := strconv.Atoi(projid)
+	//Make sure it's an id
+	if err != nil {
+		//TODO: Handle error
+	}
 	_type := r.FormValue("type")
+
+	//TODO: find out what I need to cound for users
 	if _type == "users" {
 
 	} else if _type == "labels" {
-
+		issues := findIssuesForProject(projid, auth, w)
+		labels := findLabelsInIssues(issues, authBool)
+		json.NewEncoder(w).Encode(labels)
 	} else {
 
 	}
@@ -121,14 +141,7 @@ func IssueHandler(w http.ResponseWriter, r *http.Request) {
 
 //StatusHandler get status code from db/ external api and uptime and version for thid API
 func StatusHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "only get method allowed", http.StatusNotImplemented)
-		return
-	}
-	http.Header.Add(w.Header(), "content-type", "application/json")
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) != 5 {
-		http.Error(w, "Expecting format .../", http.StatusBadRequest)
+	if !isGetRequest(w, r) {
 		return
 	}
 	gitlab, err := http.Get("https://git.gvk.idi.ntnu.no/api/v4/projects")
