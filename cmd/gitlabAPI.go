@@ -20,7 +20,7 @@ func main() {
 	http.HandleFunc("/", api.NilHandler)
 	http.HandleFunc("/repocheck/v1/commits/", api.CommitsHandler)
 	http.HandleFunc("/repocheck/v1/languages/", api.LangHandler)
-	//http.HandleFunc("/repocheck/v1/issues/", imt2681ass2.CountryHandler)
+	http.HandleFunc("/repocheck/v1/issues/", api.IssueHandler)
 	http.HandleFunc("/repocheck/v1/status/", api.StatusHandler)
 	http.HandleFunc("/repocheck/v1/webhooks/", api.WebhookHandler)
 
