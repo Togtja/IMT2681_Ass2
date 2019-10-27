@@ -359,10 +359,33 @@ func findLabelsInIssues(issues []Issue, auth bool) Labels {
 	for i, label := range labels {
 		labels[i].Count = dupFreq[label.Label]
 	}
+	//Sort it based on frequency
 	sort.SliceStable(labels, func(i, j int) bool {
 		return dupFreq[labels[i].Label] > dupFreq[labels[j].Label]
 	})
 	return Labels{labels, auth}
+}
+func findAuthorsInIssues(issues []Issue, auth bool) Users {
+	var users []User
+	//String map to find duplicates labels
+	dupFreq := make(map[string]int)
+	for _, issue := range issues {
+		name := issue.Author.Username
+		dupFreq[name]++
+		//first occurance
+		if dupFreq[name] == 1 {
+			users = append(users, User{name, 1})
+		}
+	}
+	//Give the the frquency
+	for i := range users {
+		users[i].Count = dupFreq[users[i].Username]
+	}
+	//Sort it based on frequency
+	sort.SliceStable(users, func(i, j int) bool {
+		return dupFreq[users[i].Username] > dupFreq[users[j].Username]
+	})
+	return Users{users, auth}
 }
 
 //EventOK Checks if the webhooks are valid
