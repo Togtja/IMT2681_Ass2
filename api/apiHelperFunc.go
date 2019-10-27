@@ -41,17 +41,14 @@ func activateWebhook(event globals.EventMsg, params []string) error {
 
 		m := doc.Data()
 		var url string = fmt.Sprint(m[globals.URLF])
-		fmt.Println("We got one!", url)
 		//TODO: Payload???
-		hmm, err := http.Get(url)
+		_, err = http.Get(url)
 		if err != nil {
-			fmt.Println("Get request to", url, "failed with", err)
 			//If we fail we just move on
 			continue
 			//return err
 		}
 		http.Post(url, "application/json", bytes.NewBuffer(invByte))
-		fmt.Println(url, "returned: ", hmm.StatusCode)
 	}
 	return nil
 }
