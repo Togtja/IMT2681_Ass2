@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,8 +19,17 @@ import (
 	"google.golang.org/api/iterator"
 )
 
-func activateWebhook(event globals.EventMsg) error {
-	iter := firedb.Client.Collection("webhooks").Where("event", "==", event).Documents(firedb.Ctx)
+func activateWebhook(event globals.EventMsg, params []string) error {
+	fmt.Println("Calling webhook with", event)
+	var invoke Invocation
+	invoke.Event = string(event)
+	invoke.Params = params
+	invoke.Time = time.Now().String()
+	invByte, err := json.Marshal(invoke)
+	if err != nil {
+		return err
+	}
+	iter := firedb.Client.Collection(globals.WebhookF).Where(globals.EventF, "==", string(event)).Documents(firedb.Ctx)
 	for {
 		doc, err := iter.Next()
 		if err == iterator.Done {
@@ -28,8 +38,20 @@ func activateWebhook(event globals.EventMsg) error {
 		if err != nil {
 			return err
 		}
-		//TODO: Send granted request
-		fmt.Println(doc.Data())
+
+		m := doc.Data()
+		var url string = fmt.Sprint(m[globals.URLF])
+		fmt.Println("We got one!", url)
+		//TODO: Payload???
+		hmm, err := http.Get(url)
+		if err != nil {
+			fmt.Println("Get request to", url, "failed with", err)
+			//If we fail we just move on
+			continue
+			//return err
+		}
+		http.Post(url, "application/json", bytes.NewBuffer(invByte))
+		fmt.Println(url, "returned: ", hmm.StatusCode)
 	}
 	return nil
 }
