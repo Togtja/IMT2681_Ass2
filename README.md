@@ -14,8 +14,7 @@
 
 Delete authorisation cache after a certain amout of hours/days
 Delete method for webhooks
-Write test 
-Add go.mod
+Write test
 
 # Commits
 
