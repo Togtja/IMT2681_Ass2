@@ -5,15 +5,17 @@
 ```
 /repocheck/v1/commits{?limit=[0-9]+{&auth=<access-token>}}
 /repocheck/v1/languages{?limit=[0-9]+{&auth=<access-token>}}
+/repocheck/v1/issues{?type=(users|labels){&auth=<access-token>}}
 /repocheck/v1/status
 /repocheck/v1/webhooks
 ```
 
-## Todo:
+## Todos:
 
-```
-/repocheck/v1/issues{?type=(users|labels){&auth=<access-token>}}
-```
+Delete authorisation cache after a certain amout of hours/days
+Delete method for webhooks
+Write test 
+Add go.mod
 
 # Commits
 
@@ -247,3 +249,4 @@ The parameter `type` indicates whether users with the most labels
 ```
 changed to:
 The parameter `type` indicates whether users with the most posted issues, as that is how I interpreted it, because the original did not make sense to me
+
