@@ -85,3 +85,12 @@ const (
 	//StatusE a Status Event
 	StatusE EventMsg = "status"
 )
+
+//Webhook fields
+const (
+	WebhookF string = "webhooks"
+	EventF   string = "Event"
+	IDF      string = "ID"
+	TimeF    string = "Time"
+	URLF     string = "URL"
+)
