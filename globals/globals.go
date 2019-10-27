@@ -77,7 +77,7 @@ type EventMsg string
 
 const (
 	//CommitE a Commit Event
-	CommitE EventMsg = "commit"
+	CommitE EventMsg = "commits"
 	//LanguagesE a Language Event
 	LanguagesE EventMsg = "languages"
 	//IssuesE a Issue Event
