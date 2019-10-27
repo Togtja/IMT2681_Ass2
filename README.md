@@ -160,7 +160,7 @@ Individual webhooks are viewable using the respective identifier returned during
 }
 ```
 
-## Invocation (Todo)
+## Invocation
 
 Upon being triggered in the endpoint associated with the event the webhook is registered with (i.e., commits, languages, issues, or status), the service send a GET request to the registered webhook URL with the following payload:
 
@@ -175,6 +175,7 @@ Upon being triggered in the endpoint associated with the event the webhook is re
 ## Deletion (Todo)
 
 To delete a webhook, send a DELETE request to the URL identifying the webhook (resource id) to be deleted.
+
 # Diviation/Changes from assigment requiretment
 
 Specified Languges payload to be
