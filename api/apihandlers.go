@@ -9,10 +9,11 @@ import (
 	"strings"
 	"time"
 
-	"../globals"
+	"RESTGvkGitLab/globals"
+
 	"google.golang.org/api/iterator"
 
-	"../firedb"
+	"RESTGvkGitLab/firedb"
 )
 
 //NilHandler throws a Bad Request

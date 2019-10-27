@@ -13,9 +13,10 @@ import (
 	"sync"
 	"time"
 
-	"../caching"
-	"../firedb"
-	"../globals"
+	"RESTGvkGitLab/caching"
+	"RESTGvkGitLab/firedb"
+	"RESTGvkGitLab/globals"
+
 	"google.golang.org/api/iterator"
 )
 

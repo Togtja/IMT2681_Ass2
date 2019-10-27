@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"../globals"
+	"RESTGvkGitLab/globals"
 )
 
 //ShouldFileCache Check if a file should be cached

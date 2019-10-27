@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"../api"
-	"../firedb"
+	"RESTGvkGitLab/api"
+	"RESTGvkGitLab/firedb"
 )
 
 func main() {
