@@ -119,11 +119,13 @@ func IssueHandler(w http.ResponseWriter, r *http.Request) {
 		auth = globals.PUBLIC
 		authBool = false
 	}
+	//TODO: Payload
 	projid := r.FormValue("projID")
 	_, err := strconv.Atoi(projid)
 	//Make sure it's an id
 	if err != nil {
-		//TODO: Handle error
+		http.Error(w, "Invalid project ID", http.StatusBadRequest)
+		return
 	}
 	_type := r.FormValue("type")
 
@@ -137,7 +139,14 @@ func IssueHandler(w http.ResponseWriter, r *http.Request) {
 		labels := findLabelsInIssues(issues, authBool)
 		json.NewEncoder(w).Encode(labels)
 	} else {
-		//TODO: Error handle invalid type
+		http.Error(w, "Invalid type", http.StatusBadRequest)
+		return
+	}
+	param := []string{_type, strconv.FormatBool(authBool)}
+	err = activateWebhook(globals.IssuesE, param)
+	if err != nil {
+		//No need to throw a webhook error to user, so just print it for sys admin
+		fmt.Println("Some error involving activating webhook:", err)
 	}
 }
 
@@ -152,15 +161,17 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, errmsg, http.StatusInternalServerError)
 		return
 	}
-	//TODO: FIX THIS (I.E call database)
-	db, err := http.Get("https://restcountries.eu/rest/v2/")
+
+	dbStatus := 200 //Assumes it to be ok
+	//Doc("0") is reserved for statuc checks
+	_, err = firedb.Client.Collection(globals.WebhookF).Doc("0").Get(firedb.Ctx)
 	if err != nil {
-		errmsg := "The HTTP request failed with error" + err.Error()
-		http.Error(w, errmsg, http.StatusInternalServerError)
-		return
+		//Can not get to server for unknow reason
+		//Gives a Service Unavaliable error
+		dbStatus = 503
 	}
 	uptimeString := fmt.Sprintf("%.0f seconds", uptime().Seconds())
-	diag := Status{gitlab.StatusCode, db.StatusCode, uptimeString, globals.Version}
+	diag := Status{gitlab.StatusCode, dbStatus, uptimeString, globals.Version}
 	json.NewEncoder(w).Encode(diag)
 	var param []string //Empty parameters, as Status does not take in parameters
 	err = activateWebhook(globals.StatusE, param)
