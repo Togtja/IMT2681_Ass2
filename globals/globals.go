@@ -1,7 +1,6 @@
 package globals
 
 import (
-	"strconv"
 	"time"
 )
 
@@ -27,8 +26,8 @@ const MAXPAGE int = 100
 //MAXPERPAGE how many result per page (max taken from gitlab API docs)
 const MAXPERPAGE int = 100
 
-//PAGEQ is the page query
-var PAGEQ string = "?per_page=" + strconv.Itoa(MAXPERPAGE) + "&page="
+//PAGEQ is the page query (100 is MAXPAGE)
+const PAGEQ string = "?per_page=100&page="
 
 //StartTime The time used to find the uptime of this program
 var StartTime time.Time
