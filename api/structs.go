@@ -85,3 +85,10 @@ type WebhookGet struct {
 	Event string `json:"event"`
 	Time  string `json:"time"`
 }
+
+//Invocation  it invokes the registerd webhook
+type Invocation struct {
+	Event  string   `json:"event"`
+	Params []string `json:"params"`
+	Time   string   `json:"timestamp"`
+}
