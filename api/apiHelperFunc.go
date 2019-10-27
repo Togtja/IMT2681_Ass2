@@ -235,8 +235,12 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 	limit := findLimit(w, r)
 	offset := findOffset(w, r)
 
-	file := caching.FileExist(fileName, fileDir)
-	if file != nil {
+	status, file := caching.ShouldFileCache(fileName, fileDir)
+	if status == globals.Error || status == globals.DirFail {
+		http.Error(w, "Failed to create a file", http.StatusInternalServerError)
+		return limit, offset, false
+	}
+	if status == globals.Exist {
 		//The file exist
 		err := caching.ReadFile(file, &v)
 		if err != nil {
@@ -249,8 +253,12 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 		projectFileName := auth + globals.PROJIDFILE
 		var projects []Project
 		//First see if project already exist
-		file := caching.FileExist(projectFileName, globals.PROJIDDIR)
-		if file != nil {
+		status, file = caching.ShouldFileCache(projectFileName, globals.PROJIDDIR)
+		if status == globals.Error || status == globals.DirFail {
+			http.Error(w, "Failed to create a file", http.StatusInternalServerError)
+			return limit, offset, false
+		}
+		if status == globals.Exist {
 			//The file exist
 			//We read from file
 			err := caching.ReadFile(file, &projects)
