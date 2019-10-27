@@ -129,13 +129,15 @@ func IssueHandler(w http.ResponseWriter, r *http.Request) {
 
 	//TODO: find out what I need to cound for users
 	if _type == "users" {
-
+		issues := findIssuesForProject(projid, auth, w)
+		users := findAuthorsInIssues(issues, authBool)
+		json.NewEncoder(w).Encode(users)
 	} else if _type == "labels" {
 		issues := findIssuesForProject(projid, auth, w)
 		labels := findLabelsInIssues(issues, authBool)
 		json.NewEncoder(w).Encode(labels)
 	} else {
-
+		//TODO: Error handle invalid type
 	}
 }
 
