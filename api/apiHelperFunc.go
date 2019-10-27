@@ -174,7 +174,7 @@ func subAPICallsForCommits(projects []Project, auth string, w http.ResponseWrite
 	return repos
 }
 func subAPICallsForLang(projects []Project, auth string, w http.ResponseWriter) []string {
-	query := globals.GITAPI + "projects/"
+	query := globals.GITAPI + globals.PROJQ
 	var lang []string
 
 	//String map to find duplicates
@@ -324,6 +324,45 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 		caching.CacheStruct(fileName, fileDir, v)
 	}
 	return limit, offset, true
+}
+func findIssuesForProject(projID string, auth string, w http.ResponseWriter) []Issue {
+	var issues []Issue
+	for i := 0; i < globals.MAXPAGE; i++ {
+		var subissues []Issue
+		query := globals.GITAPI + globals.PROJQ + projID + "/issues" + globals.PAGEQ + strconv.Itoa(i+1)
+		err := apiGetCall(w, query, auth, &subissues)
+		if err != nil {
+
+		}
+		if len(subissues) == 0 {
+			break
+		}
+		issues = append(issues, subissues...)
+	}
+
+	return issues
+}
+func findLabelsInIssues(issues []Issue, auth bool) Labels {
+	var labels []Label
+	//String map to find duplicates labels
+	dupFreq := make(map[string]int)
+	for _, issue := range issues {
+		for _, label := range issue.Labels {
+			dupFreq[label]++
+			//first time
+			if dupFreq[label] == 1 {
+				labels = append(labels, Label{label, 1})
+			}
+		}
+	}
+	//Give the the frquency
+	for i, label := range labels {
+		labels[i].Count = dupFreq[label.Label]
+	}
+	sort.SliceStable(labels, func(i, j int) bool {
+		return dupFreq[labels[i].Label] > dupFreq[labels[j].Label]
+	})
+	return Labels{labels, auth}
 }
 
 //EventOK Checks if the webhooks are valid
