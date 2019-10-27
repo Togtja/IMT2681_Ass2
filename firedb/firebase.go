@@ -32,8 +32,6 @@ func init() {
 	fmt.Println(Client)
 
 }
-
-//Test TODO:Delete this
-func Test() {
-	fmt.Println("Test")
+func InitDataBase() {
+	fmt.Println("Database Init finished")
 }

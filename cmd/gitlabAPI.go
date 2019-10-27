@@ -12,7 +12,7 @@ import (
 
 func main() {
 	fmt.Println("Starting application:")
-	firedb.Test()
+	firedb.InitDataBase()
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
