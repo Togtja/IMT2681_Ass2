@@ -158,7 +158,7 @@ func subAPICallsForLang(projects []Project, auth string, w http.ResponseWriter) 
 	//String map to find duplicates
 	dupFreq := make(map[string]int)
 
-	//We have the project now we need to find the amout of commits for each
+	//We have the project now we need to find programming langugues
 	//project
 	var wg sync.WaitGroup
 	var m = &sync.Mutex{}
@@ -210,7 +210,7 @@ func subAPICallsForLang(projects []Project, auth string, w http.ResponseWriter) 
 
 	return lang
 }
-func isCorrectRequest(w http.ResponseWriter, r *http.Request) bool {
+func isGetRequest(w http.ResponseWriter, r *http.Request) bool {
 	if r.Method != http.MethodGet {
 		//There is only Get method to commits
 		http.Error(w, "only get method allowed", http.StatusNotImplemented)
@@ -226,9 +226,9 @@ func isCorrectRequest(w http.ResponseWriter, r *http.Request) bool {
 }
 
 //Works for commits and langugues
-func genericHandler(w http.ResponseWriter, r *http.Request, fileName string, fileDir string,
+func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, fileDir string,
 	v interface{}, auth string) (int64, int64, bool) {
-	if !isCorrectRequest(w, r) {
+	if !isGetRequest(w, r) {
 		return 0, 0, false
 	}
 	//Find the headers

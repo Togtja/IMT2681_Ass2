@@ -22,6 +22,9 @@ func NilHandler(w http.ResponseWriter, r *http.Request) {
 
 //CommitsHandler handler to find the amout of commits
 func CommitsHandler(w http.ResponseWriter, r *http.Request) {
+	if !isGetRequest(w, r) {
+		return
+	}
 	var repo Repos
 	repo.Auth = false
 	//Default public
@@ -36,7 +39,7 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 		auth = globals.PUBLIC
 	}
 	commitFileName = commitFileName + globals.COMMITFILE
-	limit, offset, ok := genericHandler(w, r, commitFileName, globals.COMMITDIR, &repo, auth)
+	limit, offset, ok := genericGetHandler(w, r, commitFileName, globals.COMMITDIR, &repo, auth)
 	if ok == false {
 		return
 	}
@@ -56,20 +59,9 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 
 //LangHandler handles the Programming Language requests
 func LangHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodGet {
-		http.Error(w, "only get method allowed", http.StatusNotImplemented)
+	if !isGetRequest(w, r) {
 		return
 	}
-	http.Header.Add(w.Header(), "content-type", "application/json")
-	parts := strings.Split(r.URL.Path, "/")
-	if len(parts) != 5 {
-		http.Error(w, "Expecting format .../", http.StatusBadRequest)
-		return
-	}
-	//Find the headers
-	//limit := findLimit(w, r)
-	//offset := findOffset(w, r)
-
 	var lang Lang
 	lang.Auth = false
 	langFileName := globals.PUBLIC
@@ -83,7 +75,7 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 		auth = globals.PUBLIC
 	}
 	langFileName = langFileName + globals.LANGFILE
-	limit, offset, ok := genericHandler(w, r, langFileName, globals.LANGDIR, &lang, auth)
+	limit, offset, ok := genericGetHandler(w, r, langFileName, globals.LANGDIR, &lang, auth)
 	if ok == false {
 		return
 	}
@@ -94,13 +86,15 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 		limit = int64(len(lang.Language)) - offset
 
 	}
+	//TODO: Get payload
 	lang.Language = lang.Language[offset : limit+offset]
 	json.NewEncoder(w).Encode(lang)
+
 }
 
 //IssueHandler handles issue request
 func IssueHandler(w http.ResponseWriter, r *http.Request) {
-	if !isCorrectRequest(w, r) {
+	if !isGetRequest(w, r) {
 		return
 	}
 	_type := r.FormValue("type")
@@ -149,6 +143,14 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodPost:
+		//Get payload
+		var webhook Webhook
+		err := json.NewDecoder(r.Body).Decode(&webhook)
+		if err != nil {
+			http.Error(w, "Something went wrong: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+
 		//Finds all the current ids
 		iter := firedb.Client.Collection("webhooks").Documents(firedb.Ctx)
 		var ids []int
@@ -164,6 +166,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 			id, _ := strconv.Atoi(doc.Ref.ID)
 			ids = append(ids, id)
 		}
+
 		//Finds a new ID (ID's starts from 1)
 		var newid int
 		sort.Ints(ids)
@@ -175,12 +178,6 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 				//We found an unused id
 				break
 			}
-		}
-		var webhook Webhook
-		err := json.NewDecoder(r.Body).Decode(&webhook)
-		if err != nil {
-			http.Error(w, "Something went wrong: "+err.Error(), http.StatusBadRequest)
-			return
 		}
 		if webhook.Event == "" || webhook.URL == "" {
 			http.Error(w, "Please provide both event and url", http.StatusBadRequest)
