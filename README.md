@@ -12,9 +12,10 @@
 
 ## Todos:
 
-Delete authorisation cache after a certain amout of hours/days
-Delete method for webhooks
-Write test
+Delete authorisation cache after a certain amout of hours/days.
+Delete method for webhooks.
+Write test.
+Figure out what a get payload is.
 
 # Commits
 
@@ -223,9 +224,9 @@ Upon being triggered in the endpoint associated with the event the webhook is re
 
 To delete a webhook, send a DELETE request to the URL identifying the webhook (resource id) to be deleted.
 
-# Diviation/Changes from assigment requiretment
+# Deviation/Changes from assignment requirements
 
-Specified Languges payload to be
+Specified Languages payload to be
 ```
 {
     "projects": [ "project1", "project2", ... ]
