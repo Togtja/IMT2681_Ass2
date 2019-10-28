@@ -20,7 +20,15 @@ Write test.
 
 Figure out what a get payload is.
 
-Write message to user when caching
+Write message to user when caching:
+```
+b := []byte("Hold on while we get the results")
+w.Write(b)
+if f, ok := w.(http.Flusher); ok {
+	f.Flush()
+}
+```
+Uncertain how to clear the flusher
 
 # Commits
 
