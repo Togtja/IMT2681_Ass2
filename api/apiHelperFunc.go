@@ -83,7 +83,7 @@ func apiGetCall(w http.ResponseWriter, getReq string, auth string, v interface{}
 	}
 	defer resp.Body.Close()
 	//Some APIcall when calling for commits return a 404,
-	//However, I don't want to throw taht error due to 99% of them working
+	//However, I don't want to throw that error due to 99% of them working
 	//It's pointles, but the API call return empty handed
 	if resp.StatusCode == 404 {
 		return nil
@@ -133,7 +133,7 @@ func findOffset(w http.ResponseWriter, r *http.Request) int64 {
 func subAPICallsForCommits(projects []Project, auth string, w http.ResponseWriter) []Repo {
 	query := globals.GITAPI + "projects/"
 	var repos []Repo
-	//We have the project now we need to find the amout of commits for each
+	//We have the project now we need to find the amount of commits for each
 	//project
 	var wg sync.WaitGroup
 	var m = &sync.Mutex{}
@@ -179,7 +179,7 @@ func subAPICallsForLang(projects []Project, auth string, w http.ResponseWriter) 
 	//String map to find duplicates
 	dupFreq := make(map[string]int)
 
-	//We have the project now we need to find programming langugues
+	//We have the project now we need to find programming languages
 	//project
 	var wg sync.WaitGroup
 	var m = &sync.Mutex{}
@@ -316,7 +316,7 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 		}
 		lang, okL := v.(*Lang)
 		if okL {
-			fmt.Println("Finding languagues")
+			fmt.Println("Finding languages")
 			lang.Language = subAPICallsForLang(projects, auth, w)
 			v = lang
 		}
@@ -357,7 +357,7 @@ func findLabelsInIssues(issues []Issue, auth bool) Labels {
 			}
 		}
 	}
-	//Give the the frquency
+	//Give the the frequency
 	for i, label := range labels {
 		labels[i].Count = dupFreq[label.Label]
 	}
@@ -374,12 +374,12 @@ func findAuthorsInIssues(issues []Issue, auth bool) Users {
 	for _, issue := range issues {
 		name := issue.Author.Username
 		dupFreq[name]++
-		//first occurance
+		//first occurrence
 		if dupFreq[name] == 1 {
 			users = append(users, User{name, 1})
 		}
 	}
-	//Give the the frquency
+	//Give the the frequency
 	for i := range users {
 		users[i].Count = dupFreq[users[i].Username]
 	}

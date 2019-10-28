@@ -1,6 +1,6 @@
 # Web Service Specification
 
-## Implimented endpoints
+## Implemented endpoints
 
 ```
 /repocheck/v1/commits{?limit=[0-9]+{&auth=<access-token>}}

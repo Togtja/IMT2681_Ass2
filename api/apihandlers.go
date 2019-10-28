@@ -21,7 +21,7 @@ func NilHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid request", http.StatusBadRequest)
 }
 
-//CommitsHandler handler to find the amout of commits
+//CommitsHandler handler to find the amount of commits
 func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 	if !isGetRequest(w, r) {
 		return
@@ -133,7 +133,7 @@ func IssueHandler(w http.ResponseWriter, r *http.Request) {
 	_type := r.FormValue("type")
 
 	http.Header.Add(w.Header(), "content-type", "application/json")
-	//TODO: find out what I need to cound for users
+	//TODO: find out what I need to count for users
 	if _type == "users" {
 		issues := findIssuesForProject(projid, auth, w)
 		users := findAuthorsInIssues(issues, authBool)
@@ -154,7 +154,7 @@ func IssueHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//StatusHandler get status code from db/ external api and uptime and version for thid API
+//StatusHandler get status code from db/ external api and uptime and version for this API
 func StatusHandler(w http.ResponseWriter, r *http.Request) {
 	if !isGetRequest(w, r) {
 		return
@@ -167,11 +167,11 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	dbStatus := 200 //Assumes it to be ok
-	//Doc("0") is reserved for statuc checks
+	//Doc("0") is reserved for status checks
 	_, err = firedb.Client.Collection(globals.WebhookF).Doc("0").Get(firedb.Ctx)
 	if err != nil {
-		//Can not get to server for unknow reason
-		//Gives a Service Unavaliable error
+		//Can not get to server for unknown reason
+		//Gives a Service Unavailable error
 		dbStatus = 503
 	}
 	uptimeString := fmt.Sprintf("%.0f seconds", uptime().Seconds())

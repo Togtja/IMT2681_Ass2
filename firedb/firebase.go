@@ -9,10 +9,10 @@ import (
 	"google.golang.org/api/option"
 )
 
-//Ctx the contect of the firebase client
+//Ctx the connect of the firebase client
 var Ctx context.Context
 
-//Client the firestore clinet
+//Client the firestore client
 var Client *firestore.Client
 
 func init() {

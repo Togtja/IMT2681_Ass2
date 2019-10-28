@@ -6,7 +6,7 @@ type Repos struct {
 	Auth  bool   `json:"auth"`
 }
 
-//Repo represent a single repositiry
+//Repo represent a single repository
 type Repo struct {
 	Repository string `json:"repository"`
 	Commits    int    `json:"commits"`
@@ -18,7 +18,7 @@ type Lang struct {
 	Auth     bool     `json:"auth"`
 }
 
-//LangPayload the expected payload for Lang Get Metohd
+//LangPayload the expected payload for Lang Get Method
 type LangPayload struct {
 	ProjectName []string `json:"projects"`
 }
@@ -58,15 +58,13 @@ type Label struct {
 	Count int    `json:"count"`
 }
 
-//Status is the diganostic and status tools
+//Status is the diagnostic and status tools
 type Status struct {
 	Gitlab   int    `json:"gitlab"`
 	Database int    `json:"database"`
 	Uptime   string `json:"uptime"`
 	Version  string `json:"version"`
 }
-
-//The lengs of it's array is the number of commits
 
 //Commit Details regarding the commit
 type Commit struct {
@@ -97,7 +95,7 @@ type WebhookGet struct {
 	Time  string `json:"time"`
 }
 
-//Invocation  it invokes the registerd webhook
+//Invocation  it invokes the registered webhook
 type Invocation struct {
 	Event  string   `json:"event"`
 	Params []string `json:"params"`
