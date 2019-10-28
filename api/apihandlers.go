@@ -52,6 +52,7 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 
 	}
 	repo.Repos = repo.Repos[offset : limit+offset]
+	http.Header.Add(w.Header(), "content-type", "application/json")
 	json.NewEncoder(w).Encode(repo)
 
 	param := []string{strconv.FormatInt(limit, 10), strconv.FormatInt(offset, 10), strconv.FormatBool(repo.Auth)}
@@ -93,6 +94,7 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 		limit = int64(len(lang.Language)) - offset
 
 	}
+	http.Header.Add(w.Header(), "content-type", "application/json")
 	//TODO: Get payload
 	lang.Language = lang.Language[offset : limit+offset]
 	json.NewEncoder(w).Encode(lang)
@@ -130,6 +132,7 @@ func IssueHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	_type := r.FormValue("type")
 
+	http.Header.Add(w.Header(), "content-type", "application/json")
 	//TODO: find out what I need to cound for users
 	if _type == "users" {
 		issues := findIssuesForProject(projid, auth, w)
@@ -172,6 +175,8 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 		dbStatus = 503
 	}
 	uptimeString := fmt.Sprintf("%.0f seconds", uptime().Seconds())
+
+	http.Header.Add(w.Header(), "content-type", "application/json")
 	diag := Status{gitlab.StatusCode, dbStatus, uptimeString, globals.Version}
 	json.NewEncoder(w).Encode(diag)
 	var param []string //Empty parameters, as Status does not take in parameters

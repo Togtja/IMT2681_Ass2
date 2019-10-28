@@ -81,6 +81,7 @@ func apiGetCall(w http.ResponseWriter, getReq string, auth string, v interface{}
 		http.Error(w, errmsg, http.StatusInternalServerError)
 		return err
 	}
+	defer resp.Body.Close()
 	//Some APIcall when calling for commits return a 404,
 	//However, I don't want to throw taht error due to 99% of them working
 	//It's pointles, but the API call return empty handed
@@ -236,7 +237,6 @@ func isGetRequest(w http.ResponseWriter, r *http.Request) bool {
 		http.Error(w, "only get method allowed", http.StatusNotImplemented)
 		return false
 	}
-	http.Header.Add(w.Header(), "content-type", "application/json")
 	parts := strings.Split(r.URL.Path, "/")
 	if len(parts) != 5 {
 		http.Error(w, "Expecting format .../", http.StatusBadRequest)
@@ -284,7 +284,7 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 		if status == globals.Exist {
 			//The file exist
 			//We read from file
-			err := caching.ReadFile(file, &projects)
+			err := caching.ReadFile(filepro, &projects)
 			if err != nil {
 				errmsg := "The Failed Reading from file with error" + err.Error()
 				http.Error(w, errmsg, http.StatusInternalServerError)
@@ -292,7 +292,6 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 			}
 		} else {
 			//Else we need to query to get it
-			//fmt.Fprint(w, "Hold on while we get the results")
 			for i := 0; i < globals.MAXPAGE; i++ {
 				var subProj []Project
 				query := globals.GITAPI + globals.PROJQ + globals.PAGEQ + strconv.Itoa(i+1)
@@ -312,13 +311,12 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 		}
 		repo, okR := v.(*Repos)
 		if okR {
-			//fmt.Fprint(w, "Hold on while we get the results")
 			repo.Repos = subAPICallsForCommits(projects, auth, w)
 			v = repo
 		}
 		lang, okL := v.(*Lang)
 		if okL {
-			//fmt.Fprint(w, "Hold on while we get the results")
+			fmt.Println("Finding languagues")
 			lang.Language = subAPICallsForLang(projects, auth, w)
 			v = lang
 		}
