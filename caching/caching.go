@@ -28,9 +28,8 @@ func ShouldFileCache(filename string, dir string) (globals.FileMsg, *os.File) {
 		return globals.Error, nil
 	}
 	mtime := info.ModTime()
-	fmt.Println("Last changed:", mtime)
 	timenow := time.Now()
-	fmt.Println("Time now:", timenow)
+	fmt.Println("CHecking dates on", path)
 	fmt.Println("Is", timenow.Sub(mtime).Hours(), "larger than", 24, "?")
 	//Does not care for timezones btw
 	if timenow.Sub(mtime).Hours() > 24 {
@@ -61,13 +60,13 @@ func CreateFile(filename string, dir string) (globals.FileMsg, *os.File) {
 			}
 		}
 		//Create the file
-		fmt.Println("trying to create file")
+		fmt.Println("trying to create", path)
 		file, err = os.Create(path)
 		if err != nil {
 
 			return globals.Error, nil
 		}
-		fmt.Println("file created")
+		fmt.Println(path, "created")
 		return globals.Created, file
 	}
 	return globals.Exist, file
