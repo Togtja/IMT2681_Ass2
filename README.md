@@ -12,13 +12,15 @@
 
 ## Todos:
 
-Delete authorisation cache after a certain amout of hours/days.
+Delete authorization cache after a certain amount of hours/days.
 
 Delete method for webhooks.
 
 Write test.
 
 Figure out what a get payload is.
+
+Write message to user when caching
 
 # Commits
 
@@ -30,7 +32,7 @@ The endpoint accepts GET requests with an empty payload.
 
 If not specified, the parameter `limit` returns 5 repositories, 
 
-If `auth` parameter is not specified, it will return publicly avalable repositories
+If `auth` parameter is not specified, it will return publicly available repositories
 
 ## Response
 
@@ -235,16 +237,16 @@ Specified Languages payload to be
     "projects": [ "project1", "project2", ... ]
 }
 ```
-and that project names assums 'name' field in https://git.gvk.idi.ntnu.no/api/v4/projects
+and that project names assume 'name' field in https://git.gvk.idi.ntnu.no/api/v4/projects
 
 instead of just
 ```
  [ "project1", "project2", ... ]
 ```
 
-The invocation gives a string array of the diffrent parameters, instead of a string
+The invocation gives a string array of the different parameters, instead of a string
 
-Instead of responding with just the ID when you create a webook, I respone with the entire date for the webhook as a JSON format. This is done in purpouse, becuase I belive this makes more sense
+Instead of responding with just the ID when you create a webhook, I respond with the entire date for the webhook as a JSON format. This is done in purpose, because I believe this makes more sense
 
 In issues:
 ```
@@ -253,3 +255,4 @@ The parameter `type` indicates whether users with the most labels
 changed to:
 The parameter `type` indicates whether users with the most posted issues, as that is how I interpreted it, because the original did not make sense to me
 
+As rased by issue #29 in the assignment gitlab, I send true or false values in the webhook, instead of the actual authentication tokens
