@@ -245,7 +245,7 @@ func isGetRequest(w http.ResponseWriter, r *http.Request) bool {
 	return true
 }
 
-//Works for commits and langugues
+//Works for commits and languages
 func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, fileDir string,
 	v interface{}, auth string) (int64, int64, bool) {
 	if !isGetRequest(w, r) {
@@ -256,6 +256,7 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 	offset := findOffset(w, r)
 
 	status, file := caching.ShouldFileCache(fileName, fileDir)
+	defer file.Close()
 	if status == globals.Error || status == globals.DirFail {
 		http.Error(w, "Failed to create a file", http.StatusInternalServerError)
 		return limit, offset, false
@@ -270,10 +271,12 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 		}
 		//We have no file
 	} else {
+		//If we have no project file, we have no lang or commit files
 		projectFileName := auth + globals.PROJIDFILE
 		var projects []Project
 		//First see if project already exist
-		status, file = caching.ShouldFileCache(projectFileName, globals.PROJIDDIR)
+		status, filepro := caching.ShouldFileCache(projectFileName, globals.PROJIDDIR)
+		defer filepro.Close()
 		if status == globals.Error || status == globals.DirFail {
 			http.Error(w, "Failed to create a file", http.StatusInternalServerError)
 			return limit, offset, false
@@ -289,6 +292,7 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 			}
 		} else {
 			//Else we need to query to get it
+			//fmt.Fprint(w, "Hold on while we get the results")
 			for i := 0; i < globals.MAXPAGE; i++ {
 				var subProj []Project
 				query := globals.GITAPI + globals.PROJQ + globals.PAGEQ + strconv.Itoa(i+1)
@@ -303,23 +307,25 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 				}
 				projects = append(projects, subProj...)
 			}
-			caching.CacheStruct(projectFileName, globals.PROJIDDIR, projects)
+			caching.CacheStruct(filepro, projects)
 
 		}
 		repo, okR := v.(*Repos)
 		if okR {
+			//fmt.Fprint(w, "Hold on while we get the results")
 			repo.Repos = subAPICallsForCommits(projects, auth, w)
 			v = repo
 		}
 		lang, okL := v.(*Lang)
 		if okL {
+			//fmt.Fprint(w, "Hold on while we get the results")
 			lang.Language = subAPICallsForLang(projects, auth, w)
 			v = lang
 		}
 		if !okR && !okL {
 			return 0, 0, false
 		}
-		caching.CacheStruct(fileName, fileDir, v)
+		caching.CacheStruct(file, v)
 	}
 	return limit, offset, true
 }

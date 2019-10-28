@@ -18,6 +18,8 @@ const (
 	Exist FileMsg = 3
 	//DirFail directory failed to create
 	DirFail FileMsg = 4
+	//Deleted the file has been deleted
+	Deleted FileMsg = 5
 )
 
 //MAXPAGE how many pages (calls we are going to go through)

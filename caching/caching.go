@@ -35,7 +35,12 @@ func ShouldFileCache(filename string, dir string) (globals.FileMsg, *os.File) {
 	//Does not care for timezones btw
 	if timenow.Sub(mtime).Hours() > 24 {
 		fmt.Println("Cache is old, Run Update")
-		return DeleteFile(filename, dir)
+		file.Close() //A new file will be created
+		status = DeleteFile(filename, dir)
+		if status == globals.Deleted {
+			return simpleCreateFile(filename, dir)
+		}
+		return status, nil
 	}
 	fmt.Println("Cache is recent, No need to update")
 	return globals.Exist, file
@@ -69,16 +74,7 @@ func CreateFile(filename string, dir string) (globals.FileMsg, *os.File) {
 }
 
 //CacheStruct creates a file in the dir with the struct as a json
-func CacheStruct(filename string, dir string, v interface{}) {
-	should, file := ShouldFileCache(filename, dir)
-	if should == globals.Error || should == globals.DirFail {
-		fmt.Println("Failed to find or create file")
-		return
-	}
-	if should == globals.Exist {
-		//No need to cache the files
-		return
-	}
+func CacheStruct(file *os.File, v interface{}) {
 	vBytes, _ := json.Marshal(v)
 	file.Write(vBytes)
 	fmt.Println("We are done")
@@ -107,13 +103,19 @@ func ReadFile(file *os.File, v interface{}) error {
 }
 
 //DeleteFile Given a filename and dir
-func DeleteFile(filename string, dir string) (globals.FileMsg, *os.File) {
+func DeleteFile(filename string, dir string) globals.FileMsg {
 	path := dir + "/" + filename
 	err := os.Remove(path)
 	if err != nil {
 		fmt.Println(err)
-		return globals.Error, nil
+		return globals.Error
 	}
+	return globals.Deleted
+}
+
+//Does not to all the cheking that CreateFile does
+func simpleCreateFile(filename string, dir string) (globals.FileMsg, *os.File) {
+	path := dir + "/" + filename
 	file, err := os.Create(path)
 	if err != nil {
 		fmt.Println(err)
