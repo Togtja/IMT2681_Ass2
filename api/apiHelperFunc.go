@@ -247,7 +247,7 @@ func isGetRequest(w http.ResponseWriter, r *http.Request) bool {
 
 //Works for commits and languages
 func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, fileDir string,
-	v interface{}, auth string) (int64, int64, bool) {
+	v interface{}, auth string, payload Payload) (int64, int64, bool) {
 	if !isGetRequest(w, r) {
 		return 0, 0, false
 	}
@@ -308,6 +308,17 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 			}
 			caching.CacheStruct(filepro, projects)
 
+		}
+		if len(payload.ProjectName) > 0 {
+			var temp []Project
+			for i := range payload.ProjectName {
+				for j := range projects {
+					if payload.ProjectName[i] == projects[j].NamePath{
+						temp = append(temp, projects[j])
+						break;
+					} 
+				}
+			}
 		}
 		repo, okR := v.(*Repos)
 		if okR {
@@ -403,5 +414,54 @@ func EventOK(event string) bool {
 		return true
 	default:
 		return false
+	}
+}
+//CommitWithPayload is a post request where
+func CommitWithPayload(w http.ResponseWriter, r *http.Request, hasPayload bool){
+	var langBody Payload
+	if hasPayload{
+		err := json.NewDecoder(r.Body).Decode(&langBody)
+		if err != nil {
+			http.Error(w, "Something went wrong with the body : " + err.Error(), http.StatusBadRequest)
+			return
+		}
+			
+	}
+	var lang Lang
+	lang.Auth = false
+	langFileName := globals.PUBLIC
+	auth := r.FormValue("auth")
+	if auth != "" {
+		//Make a personal json file for authorized users
+		//TODO: Should be deleted after XX hours/Days
+		lang.Auth = true
+		langFileName = auth
+	} else {
+		auth = globals.PUBLIC
+	}
+	langFileName = langFileName + globals.LANGFILE
+	limit, offset, ok := genericGetHandler(w, r, langFileName, globals.LANGDIR, &lang, auth, langBody)
+	if ok == false {
+		return
+	}
+	if limit+offset > int64(len(lang.Language)) {
+		if offset >= int64(len(lang.Language)) {
+			offset = 0
+		}
+		limit = int64(len(lang.Language)) - offset
+
+	}
+	http.Header.Add(w.Header(), "content-type", "application/json")
+	//TODO: Get payload
+
+	
+	lang.Language = lang.Language[offset : limit+offset]
+	json.NewEncoder(w).Encode(lang)
+
+	param := []string{strconv.FormatInt(limit, 10), strconv.FormatInt(offset, 10), strconv.FormatBool(lang.Auth)}
+	err: = activateWebhook(globals.LanguagesE, param)
+	if err != nil {
+		//No need to throw a webhook error to user, so just print it for sys admin
+		fmt.Println("Some error involving activating webhook:", err)
 	}
 }

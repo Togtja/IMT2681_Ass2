@@ -18,8 +18,8 @@ type Lang struct {
 	Auth     bool     `json:"auth"`
 }
 
-//LangPayload the expected payload for Lang Get Method
-type LangPayload struct {
+//Payload the expected payload for Lang Get Method
+type Payload struct {
 	ProjectName []string `json:"projects"`
 }
 
