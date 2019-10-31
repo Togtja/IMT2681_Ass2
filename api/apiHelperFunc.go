@@ -36,20 +36,21 @@ func activateWebhook(event globals.EventMsg, params []string) error {
 		if err == iterator.Done {
 			break
 		}
+		//We failed to iterate through
 		if err != nil {
 			return err
 		}
 
 		m := doc.Data()
 		var url string = fmt.Sprint(m[globals.URLF])
-		//TODO: Payload???
-		_, err = http.Get(url)
+		_, err = http.Post(url, "application/json", bytes.NewBuffer(invByte))
 		if err != nil {
 			//If we fail we just move on
 			continue
-			//return err
+			/*We ignore this error becuase
+			There are other webhooks that need to be called
+			And we don't know who's fault it is*/
 		}
-		http.Post(url, "application/json", bytes.NewBuffer(invByte))
 	}
 	return nil
 }
