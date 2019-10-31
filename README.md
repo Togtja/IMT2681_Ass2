@@ -73,8 +73,6 @@ This endpoint returns the languages used in given projects by distribution in de
 ## Request
 
 The endpoint accept GET requests. If the payload is empty, it returns top-ranking languages across all accessible repositories irrespective of the distribution value.
-
-### Todo:
 If a payload is specified, only the listed repositories be considered when identifying the top-ranking languages. The payload format is as an array of project names, i.e., :
 
 ```
@@ -82,7 +80,11 @@ If a payload is specified, only the listed repositories be considered when ident
     "projects": [ "project1", "project2", ... ]
 }
 ```
-(project names are the 'name' field in https://git.gvk.idi.ntnu.no/api/v4/projects)
+(project names are the 'path_with_namespace' field in https://git.gvk.idi.ntnu.no/api/v4/projects)
+Due to it being unique
+
+If not specified, the parameter `limit` should return 5 languages.
+If not specified in the `auth` parameter, the request should occur without authentication.
 ## Response
 
 Calls to the endpoint produce output according to the following JSON schema specification and list the most frequently ranked languages (based on returned ranking for the individual projects):
@@ -96,7 +98,7 @@ Calls to the endpoint produce output according to the following JSON schema spec
 # Issues 
 This endpoint will return the name of the users or labels (see parameters) for the attached to the most issues for a given project.  
 
-## Request (Todo)
+## Request
 
 The endpoint should accept GET requests with the following payload:
 
@@ -105,6 +107,8 @@ The endpoint should accept GET requests with the following payload:
   "project": "project name" // name of the project whose issues are analysed
 }
 ```
+(project names are the 'path_with_namespace' field in https://git.gvk.idi.ntnu.no/api/v4/projects)
+Due to it being unique
 
 The parameter `type` indicates whether users with the most posted issues (value `users`), or the most frequently referred labels (value `labels`) should be returned. If not specified, a corresponding error and status code should be returned.
 
