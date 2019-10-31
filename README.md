@@ -264,3 +264,13 @@ changed to:
 The parameter `type` indicates whether users with the most posted issues, as that is how I interpreted it, because the original did not make sense to me
 
 As rased by issue #29 in the assignment gitlab, I send true or false values in the webhook, instead of the actual authentication tokens
+
+# Extra Features
+
+I made some extra features, that should not go against the specification. Though they may result is some unforeseen bugs, but I believe the features justify the use
+## Caching
+
+I cache the API calls, so that the next api calls happen quickly. They are stored in a folder called `API_Files`, under 3 sub folders `commits`, `projects` and `languages` (All of this is found in Globals). If you authenticate yourself, you get your own files, at the cost of the first authentication it takes some time to do all the API calls to get every repository you can see. Your authentication file will eventually be deleted, currently I check every 72 hours if any authenticated files are older than 24 hours old.
+
+## Multi-Threading 
+I employ multi-threading to do the API calls, this is to speed up calls, seeing as they are the slowest part of my code. It is especially important because I am cashing a lot of the data, so users might expect long load time for a simple call if nothing has been cached, I try to mitigate this the best of my abilities with multi-threading
