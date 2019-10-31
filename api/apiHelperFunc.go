@@ -347,8 +347,7 @@ func findIssuesForProject(project PayloadIssue, auth string,
 		}
 	}
 	if projID == "nil" {
-		fmt.Println("No project ID provided or found")
-		return nil, errors.New("No project ID provided or found")
+		return nil, errors.New("No project provided or found")
 	}
 
 	return findIssues(projID, auth, w, r), nil
