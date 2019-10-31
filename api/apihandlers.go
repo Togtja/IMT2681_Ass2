@@ -88,7 +88,7 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 	if ok == false {
 		return
 	}
-	var payload Payload
+	var payload PayloadLang
 	ok, err := GetPayload(r, &payload)
 	if err != nil {
 		fmt.Println("Failed to read body", err.Error())
@@ -143,25 +143,39 @@ func IssueHandler(w http.ResponseWriter, r *http.Request) {
 		auth = globals.PUBLIC
 		authBool = false
 	}
-	//TODO: Payload
-	projid := r.FormValue("projID")
-	_, err := strconv.Atoi(projid)
-	//Make sure it's an id
+	var project PayloadIssue
+	_, err := GetPayload(r, &project)
 	if err != nil {
-		http.Error(w, "Invalid project ID", http.StatusBadRequest)
+		fmt.Println("Failed to read body", err.Error())
+		http.Error(w, "Invalid Body", http.StatusBadRequest)
 		return
 	}
 	_type := r.FormValue("type")
 
 	http.Header.Add(w.Header(), "content-type", "application/json")
 	//TODO: find out what I need to count for users
+	issues, err := findIssuesForProject(project, auth, w, r)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if len(issues) == 0 {
+		http.Error(w, "Could not find any issues with that name", http.StatusBadRequest)
+		return
+	}
 	if _type == "users" {
-		issues := findIssuesForProject(projid, auth, w)
 		users := findAuthorsInIssues(issues, authBool)
+		if len(users.Users) == 0 {
+			http.Error(w, "Could not find issues by users in the project", http.StatusBadRequest)
+			return
+		}
 		json.NewEncoder(w).Encode(users)
 	} else if _type == "labels" {
-		issues := findIssuesForProject(projid, auth, w)
 		labels := findLabelsInIssues(issues, authBool)
+		if len(labels.Labels) == 0 {
+			http.Error(w, "Could not find issues in the project", http.StatusBadRequest)
+			return
+		}
 		json.NewEncoder(w).Encode(labels)
 	} else {
 		http.Error(w, "Invalid type", http.StatusBadRequest)
@@ -347,6 +361,9 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Could not Delete the resource", http.StatusInternalServerError)
 			return
 		}
+		msg := "Successfully deleted resource" + strconv.Itoa(delID)
+		bmsg := []byte(msg)
+		w.Write(bmsg)
 	default:
 		http.Error(w, "Invalid method "+r.Method, http.StatusBadRequest)
 	}

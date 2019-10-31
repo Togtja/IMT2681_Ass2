@@ -18,8 +18,8 @@ type Lang struct {
 	Auth     bool     `json:"auth"`
 }
 
-//Payload the expected payload for Lang Get Method
-type Payload struct {
+//PayloadLang the expected payload for Lang Get Method
+type PayloadLang struct {
 	ProjectName []string `json:"projects"`
 }
 
@@ -56,6 +56,11 @@ type Labels struct {
 type Label struct {
 	Label string `json:"label"`
 	Count int    `json:"count"`
+}
+
+//PayloadIssue the expected payload for Issue Get Method
+type PayloadIssue struct {
+	ProjectName string `json:"project"`
 }
 
 //Status is the diagnostic and status tools

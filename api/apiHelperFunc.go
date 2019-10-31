@@ -334,22 +334,24 @@ func GetProjects(w http.ResponseWriter, r *http.Request, auth string) []Project 
 	}
 	return projects
 }
-func findIssuesForProject(projID string, auth string, w http.ResponseWriter) []Issue {
-	var issues []Issue
-	for i := 0; i < globals.MAXPAGE; i++ {
-		var subissues []Issue
-		query := globals.GITAPI + globals.PROJQ + projID + "/issues" + globals.PAGEQ + strconv.Itoa(i+1)
-		err := apiGetCall(w, query, auth, &subissues)
-		if err != nil {
-
-		}
-		if len(subissues) == 0 {
+func findIssuesForProject(project PayloadIssue, auth string,
+	w http.ResponseWriter, r *http.Request) ([]Issue, error) {
+	//Get projects
+	projects := GetProjects(w, r, auth)
+	//Find project ID
+	projID := "nil"
+	for i := range projects {
+		if project.ProjectName == projects[i].NamePath {
+			projID = strconv.Itoa(projects[i].ID)
 			break
 		}
-		issues = append(issues, subissues...)
+	}
+	if projID == "nil" {
+		fmt.Println("No project ID provided or found")
+		return nil, errors.New("No project ID provided or found")
 	}
 
-	return issues
+	return findIssues(projID, auth, w, r), nil
 }
 func findLabelsInIssues(issues []Issue, auth bool) Labels {
 	var labels []Label
@@ -430,4 +432,22 @@ func GetPayload(r *http.Request, v interface{}) (bool, error) {
 		return true, err
 	}
 	return false, nil
+}
+func findIssues(projID string, auth string,
+	w http.ResponseWriter, r *http.Request) []Issue {
+	var issues []Issue
+	for i := 0; i < globals.MAXPAGE; i++ {
+		var subissues []Issue
+		query := globals.GITAPI + globals.PROJQ + projID + "/issues" + globals.PAGEQ + strconv.Itoa(i+1)
+		err := apiGetCall(w, query, auth, &subissues)
+		if err != nil {
+
+		}
+		if len(subissues) == 0 {
+			break
+		}
+		fmt.Println("Issue:", subissues[0].Author)
+		issues = append(issues, subissues...)
+	}
+	return issues
 }
