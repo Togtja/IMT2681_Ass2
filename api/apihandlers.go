@@ -30,7 +30,7 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 	repo.Auth = false
 	//Default public
 	commitFileName := globals.PUBLIC
-	auth := r.FormValue("auth")
+	auth := r.FormValue(globals.AUTHP)
 	if auth != "" {
 		//Make a personal json file for authorized users
 		//Should be deleted after XX hours/Days
@@ -73,7 +73,7 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 	var lang Lang
 	lang.Auth = false
 	langFileName := globals.PUBLIC
-	auth := r.FormValue("auth")
+	auth := r.FormValue(globals.AUTHP)
 	if auth != "" {
 		//Makes a personal json file for authorized users
 		lang.Auth = true
@@ -223,7 +223,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		//Finds all the current ids
-		iter := firedb.Client.Collection("webhooks").Documents(firedb.Ctx)
+		iter := firedb.Client.Collection(globals.WebhookF).Documents(firedb.Ctx)
 		var ids []int
 		for {
 			doc, err := iter.Next()
@@ -318,7 +318,6 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		json.NewEncoder(w).Encode(webhooks[1:])
 	case http.MethodDelete:
-		//TODO: Do deleting stuff
 		var delID int
 		ok, err := GetPayload(r, &delID)
 		if err != nil {

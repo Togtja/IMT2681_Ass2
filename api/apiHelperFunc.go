@@ -110,7 +110,7 @@ func apiGetCall(w http.ResponseWriter, getReq string, auth string, v interface{}
 	return nil
 }
 func findLimit(w http.ResponseWriter, r *http.Request) int64 {
-	limittxt := r.FormValue("limit")
+	limittxt := r.FormValue(globals.LIMITP)
 	limit, err := strconv.ParseInt(limittxt, 10, 32)
 	if err != nil && limittxt != "" {
 		errmsg := "Invalid limit, error: " + err.Error()
@@ -123,7 +123,7 @@ func findLimit(w http.ResponseWriter, r *http.Request) int64 {
 	return limit
 }
 func findOffset(w http.ResponseWriter, r *http.Request) int64 {
-	offsettxt := r.FormValue("offset")
+	offsettxt := r.FormValue(globals.OFFSETP)
 	offset, err := strconv.ParseInt(offsettxt, 10, 32)
 	if err != nil && offsettxt != "" {
 		errmsg := "Invalid offset, error: " + err.Error()

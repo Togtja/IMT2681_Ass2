@@ -4,23 +4,24 @@ import (
 	"time"
 )
 
-//FileMsg A "go enum" for what the shouldChacheFile returned
-type FileMsg int
+/*******************
+API calls constants:
+********************/
 
-const (
-	//Error an error occurred
-	Error FileMsg = 0
-	//OldRenew The file did exist but is now recreated due to age
-	OldRenew FileMsg = 1
-	//Created we created the file
-	Created FileMsg = 2
-	//Exist the file Exist and is recent
-	Exist FileMsg = 3
-	//DirFail directory failed to create
-	DirFail FileMsg = 4
-	//Deleted the file has been deleted
-	Deleted FileMsg = 5
-)
+//PUBLIC prefix for public authentication
+const PUBLIC string = "public"
+
+//GITAPI Root API Call
+const GITAPI string = "https://git.gvk.idi.ntnu.no/api/v4/"
+
+//GITREPO used for repo calls
+const GITREPO string = "/repository/commits/"
+
+//LANGQ the query used to find programmig languages
+const LANGQ string = "/languages/"
+
+//PROJQ the query used to find projects
+const PROJQ string = "projects/"
 
 //MAXPAGE how many pages (calls we are going to go through)
 const MAXPAGE int = 100
@@ -37,23 +38,25 @@ var StartTime time.Time
 //Version of this current API
 const Version string = "v1"
 
+/**********
+Parameters:
+***********/
+
+//LIMITP the limit parameter
+const LIMITP string = "limit"
+
+//OFFSETP the offset parameter
+const OFFSETP string = "offset"
+
+//AUTHP the auth (authentication) parameter
+const AUTHP string = "auth"
+
 //DLIMIT is the default limit
 const DLIMIT int64 = 5
 
-//PUBLIC prefix for public authentication
-const PUBLIC string = "public"
-
-//GITAPI Root API Call
-const GITAPI string = "https://git.gvk.idi.ntnu.no/api/v4/"
-
-//GITREPO used for repo calls
-const GITREPO string = "/repository/commits/"
-
-//LANGQ the query used to find programmig languages
-const LANGQ string = "/languages/"
-
-//PROJQ the query used to find projects
-const PROJQ string = "projects/"
+/********************
+Directories constants:
+**********************/
 
 //APIFILES is a sub folder where all files get stored
 const APIFILES string = "API_Files/"
@@ -76,6 +79,10 @@ const LANGFILE string = "_languages.Json"
 //LANGDIR the directory where we store the
 const LANGDIR string = APIFILES + "languages"
 
+/*****
+Enums:
+*****/
+
 //EventMsg are an "enum" for Post request event
 type EventMsg string
 
@@ -88,6 +95,24 @@ const (
 	IssuesE EventMsg = "issues"
 	//StatusE a Status Event
 	StatusE EventMsg = "status"
+)
+
+//FileMsg A "go enum" for what the shouldChacheFile returned
+type FileMsg int
+
+const (
+	//Error an error occurred
+	Error FileMsg = 0
+	//OldRenew The file did exist but is now recreated due to age
+	OldRenew FileMsg = 1
+	//Created we created the file
+	Created FileMsg = 2
+	//Exist the file Exist and is recent
+	Exist FileMsg = 3
+	//DirFail directory failed to create
+	DirFail FileMsg = 4
+	//Deleted the file has been deleted
+	Deleted FileMsg = 5
 )
 
 //Webhook fields
