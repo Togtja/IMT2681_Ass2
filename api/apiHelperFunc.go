@@ -233,7 +233,6 @@ func subAPICallsForLang(projects []Project, auth string, w http.ResponseWriter) 
 }
 func isGetRequest(w http.ResponseWriter, r *http.Request) bool {
 	if r.Method != http.MethodGet {
-		//There is only Get method to commits
 		http.Error(w, "only get method allowed", http.StatusNotImplemented)
 		return false
 	}
@@ -247,19 +246,21 @@ func isGetRequest(w http.ResponseWriter, r *http.Request) bool {
 
 //Works for commits and languages
 func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, fileDir string,
-	v interface{}, auth string, payload Payload) (int64, int64, bool) {
-	if !isGetRequest(w, r) {
-		return 0, 0, false
-	}
+	v interface{}, auth string) ([]Project, int64, int64, bool) {
+
 	//Find the headers
 	limit := findLimit(w, r)
 	offset := findOffset(w, r)
+	projects := GetProjects(w, r, auth)
+	if projects == nil {
+		return nil, limit, offset, false
+	}
 
 	status, file := caching.ShouldFileCache(fileName, fileDir)
 	defer file.Close()
 	if status == globals.Error || status == globals.DirFail {
 		http.Error(w, "Failed to create a file", http.StatusInternalServerError)
-		return limit, offset, false
+		return nil, limit, offset, false
 	}
 	if status == globals.Exist {
 		//The file exist
@@ -267,59 +268,11 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 		if err != nil {
 			errmsg := "The Failed Reading from file with error" + err.Error()
 			http.Error(w, errmsg, http.StatusInternalServerError)
-			return limit, offset, false
+			return nil, limit, offset, false
 		}
 		//We have no file
 	} else {
 		//If we have no project file, we have no lang or commit files
-		projectFileName := auth + globals.PROJIDFILE
-		var projects []Project
-		//First see if project already exist
-		status, filepro := caching.ShouldFileCache(projectFileName, globals.PROJIDDIR)
-		defer filepro.Close()
-		if status == globals.Error || status == globals.DirFail {
-			http.Error(w, "Failed to create a file", http.StatusInternalServerError)
-			return limit, offset, false
-		}
-		if status == globals.Exist {
-			//The file exist
-			//We read from file
-			err := caching.ReadFile(filepro, &projects)
-			if err != nil {
-				errmsg := "The Failed Reading from file with error" + err.Error()
-				http.Error(w, errmsg, http.StatusInternalServerError)
-				return limit, offset, false
-			}
-		} else {
-			//Else we need to query to get it
-			for i := 0; i < globals.MAXPAGE; i++ {
-				var subProj []Project
-				query := globals.GITAPI + globals.PROJQ + globals.PAGEQ + strconv.Itoa(i+1)
-				err := apiGetCall(w, query, auth, &subProj)
-				if err != nil {
-					//The API call has failed
-					return limit, offset, false
-				}
-				//When it's empty we no longer need to do calls
-				if len(subProj) == 0 {
-					break
-				}
-				projects = append(projects, subProj...)
-			}
-			caching.CacheStruct(filepro, projects)
-
-		}
-		if len(payload.ProjectName) > 0 {
-			var temp []Project
-			for i := range payload.ProjectName {
-				for j := range projects {
-					if payload.ProjectName[i] == projects[j].NamePath{
-						temp = append(temp, projects[j])
-						break;
-					} 
-				}
-			}
-		}
 		repo, okR := v.(*Repos)
 		if okR {
 			repo.Repos = subAPICallsForCommits(projects, auth, w)
@@ -332,11 +285,53 @@ func genericGetHandler(w http.ResponseWriter, r *http.Request, fileName string, 
 			v = lang
 		}
 		if !okR && !okL {
-			return 0, 0, false
+			return nil, 0, 0, false
 		}
 		caching.CacheStruct(file, v)
 	}
-	return limit, offset, true
+	return projects, limit, offset, true
+}
+
+//GetProjects get all the projects with authentication auth
+func GetProjects(w http.ResponseWriter, r *http.Request, auth string) []Project {
+	var projects []Project
+	projectFileName := auth + globals.PROJIDFILE
+	//First see if project already exist
+	status, filepro := caching.ShouldFileCache(projectFileName, globals.PROJIDDIR)
+	defer filepro.Close()
+	if status == globals.Error || status == globals.DirFail {
+		http.Error(w, "Failed to create a file", http.StatusInternalServerError)
+		return nil
+	}
+	if status == globals.Exist {
+		//The file exist
+		//We read from file
+		err := caching.ReadFile(filepro, &projects)
+		if err != nil {
+			errmsg := "The Failed Reading from file with error" + err.Error()
+			http.Error(w, errmsg, http.StatusInternalServerError)
+			return nil
+		}
+	} else {
+		//Else we need to query to get it
+		for i := 0; i < globals.MAXPAGE; i++ {
+			var subProj []Project
+			query := globals.GITAPI + globals.PROJQ + globals.PAGEQ + strconv.Itoa(i+1)
+			err := apiGetCall(w, query, auth, &subProj)
+			if err != nil {
+				//The API call has failed
+				return nil
+			}
+			//When it's empty we no longer need to do calls
+			if len(subProj) == 0 {
+				break
+			}
+			projects = append(projects, subProj...)
+		}
+		caching.CacheStruct(filepro, projects)
+
+	}
+	return projects
 }
 func findIssuesForProject(projID string, auth string, w http.ResponseWriter) []Issue {
 	var issues []Issue
@@ -414,54 +409,5 @@ func EventOK(event string) bool {
 		return true
 	default:
 		return false
-	}
-}
-//CommitWithPayload is a post request where
-func CommitWithPayload(w http.ResponseWriter, r *http.Request, hasPayload bool){
-	var langBody Payload
-	if hasPayload{
-		err := json.NewDecoder(r.Body).Decode(&langBody)
-		if err != nil {
-			http.Error(w, "Something went wrong with the body : " + err.Error(), http.StatusBadRequest)
-			return
-		}
-			
-	}
-	var lang Lang
-	lang.Auth = false
-	langFileName := globals.PUBLIC
-	auth := r.FormValue("auth")
-	if auth != "" {
-		//Make a personal json file for authorized users
-		//TODO: Should be deleted after XX hours/Days
-		lang.Auth = true
-		langFileName = auth
-	} else {
-		auth = globals.PUBLIC
-	}
-	langFileName = langFileName + globals.LANGFILE
-	limit, offset, ok := genericGetHandler(w, r, langFileName, globals.LANGDIR, &lang, auth, langBody)
-	if ok == false {
-		return
-	}
-	if limit+offset > int64(len(lang.Language)) {
-		if offset >= int64(len(lang.Language)) {
-			offset = 0
-		}
-		limit = int64(len(lang.Language)) - offset
-
-	}
-	http.Header.Add(w.Header(), "content-type", "application/json")
-	//TODO: Get payload
-
-	
-	lang.Language = lang.Language[offset : limit+offset]
-	json.NewEncoder(w).Encode(lang)
-
-	param := []string{strconv.FormatInt(limit, 10), strconv.FormatInt(offset, 10), strconv.FormatBool(lang.Auth)}
-	err: = activateWebhook(globals.LanguagesE, param)
-	if err != nil {
-		//No need to throw a webhook error to user, so just print it for sys admin
-		fmt.Println("Some error involving activating webhook:", err)
 	}
 }

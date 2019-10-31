@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"sort"
 	"strconv"
@@ -40,7 +41,7 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 		auth = globals.PUBLIC
 	}
 	commitFileName = commitFileName + globals.COMMITFILE
-	limit, offset, ok := genericGetHandler(w, r, commitFileName, globals.COMMITDIR, &repo, auth)
+	_, limit, offset, ok := genericGetHandler(w, r, commitFileName, globals.COMMITDIR, &repo, auth)
 	if ok == false {
 		return
 	}
@@ -75,18 +76,51 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 	langFileName := globals.PUBLIC
 	auth := r.FormValue("auth")
 	if auth != "" {
-		//Make a personal json file for authorized users
-		//TODO: Should be deleted after XX hours/Days
+		//Makes a personal json file for authorized users
 		lang.Auth = true
 		langFileName = auth
 	} else {
 		auth = globals.PUBLIC
 	}
 	langFileName = langFileName + globals.LANGFILE
-	limit, offset, ok := genericGetHandler(w, r, langFileName, globals.LANGDIR, &lang, auth)
+	projects, limit, offset, ok := genericGetHandler(w, r, langFileName, globals.LANGDIR, &lang, auth)
+	//general rule: if takes ResponseWriter, and it returns a bool and not an err,
+	//the error handeling is done in the function
 	if ok == false {
 		return
 	}
+	fmt.Println("THE BODY: ", r.Body)
+	var payload Payload
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Println("Failed to read body", err.Error())
+
+		http.Error(w, "Invalid Body", http.StatusBadRequest)
+		return
+	}
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &payload)
+		if err != nil {
+			fmt.Println("Valid", err.Error())
+			http.Error(w, "Invalid Body", http.StatusBadRequest)
+			return
+		}
+	}
+	//Does not care if body/payload is empty
+	if len(payload.ProjectName) > 0 {
+		var temp []Project
+		for i := range payload.ProjectName {
+			for j := range projects {
+				if payload.ProjectName[i] == projects[j].NamePath {
+					temp = append(temp, projects[j])
+					break
+				}
+			}
+		}
+		//Find languages based of the projects
+		lang.Language = subAPICallsForLang(temp, auth, w)
+	}
+	//Make sure limit is in range
 	if limit+offset > int64(len(lang.Language)) {
 		if offset >= int64(len(lang.Language)) {
 			offset = 0
@@ -94,13 +128,13 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 		limit = int64(len(lang.Language)) - offset
 
 	}
-	http.Header.Add(w.Header(), "content-type", "application/json")
-	//TODO: Get payload
 	lang.Language = lang.Language[offset : limit+offset]
-	json.NewEncoder(w).Encode(lang)
 
+	http.Header.Add(w.Header(), "content-type", "application/json")
+	json.NewEncoder(w).Encode(lang)
+	//I decide to send the actual limit the user get and not what it asks for
 	param := []string{strconv.FormatInt(limit, 10), strconv.FormatInt(offset, 10), strconv.FormatBool(lang.Auth)}
-	err := activateWebhook(globals.LanguagesE, param)
+	err = activateWebhook(globals.LanguagesE, param)
 	if err != nil {
 		//No need to throw a webhook error to user, so just print it for sys admin
 		fmt.Println("Some error involving activating webhook:", err)
@@ -116,7 +150,6 @@ func IssueHandler(w http.ResponseWriter, r *http.Request) {
 	auth := r.FormValue("auth")
 	if auth != "" {
 		//Make a personal json file for authorized users
-		//Should be deleted after XX hours/Days
 		authBool = true
 	} else {
 		auth = globals.PUBLIC
@@ -290,7 +323,10 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 			webhooks = append(webhooks, WebhookGet{wid, event, time})
 
 		}
-		json.NewEncoder(w).Encode(webhooks)
+		sort.SliceStable(webhooks, func(i, j int) bool {
+			return webhooks[i].ID < webhooks[j].ID
+		})
+		json.NewEncoder(w).Encode(webhooks[1:])
 	case http.MethodDelete:
 		//TODO: Do deleting stuff
 	default:
