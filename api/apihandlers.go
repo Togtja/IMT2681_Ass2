@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"sort"
 	"strconv"
@@ -89,25 +88,14 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 	if ok == false {
 		return
 	}
-	fmt.Println("THE BODY: ", r.Body)
 	var payload Payload
-	body, err := ioutil.ReadAll(r.Body)
+	ok, err := GetPayload(r, &payload)
 	if err != nil {
 		fmt.Println("Failed to read body", err.Error())
-
 		http.Error(w, "Invalid Body", http.StatusBadRequest)
-		return
-	}
-	if len(body) > 0 {
-		err = json.Unmarshal(body, &payload)
-		if err != nil {
-			fmt.Println("Valid", err.Error())
-			http.Error(w, "Invalid Body", http.StatusBadRequest)
-			return
-		}
 	}
 	//Does not care if body/payload is empty
-	if len(payload.ProjectName) > 0 {
+	if ok && len(payload.ProjectName) > 0 {
 		var temp []Project
 		for i := range payload.ProjectName {
 			for j := range projects {
@@ -230,7 +218,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		var webhook Webhook
 		err := json.NewDecoder(r.Body).Decode(&webhook)
 		if err != nil {
-			http.Error(w, "Something went wrong: "+err.Error(), http.StatusBadRequest)
+			http.Error(w, "Invalid Body: "+err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -274,7 +262,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		webhook.ID = strconv.Itoa(newid)
 		webhook.Time = time.Now().String()
-		_, err = firedb.Client.Collection("webhooks").Doc(strconv.Itoa(newid)).Set(firedb.Ctx, webhook)
+		_, err = firedb.Client.Collection(globals.WebhookF).Doc(strconv.Itoa(newid)).Set(firedb.Ctx, webhook)
 		if err != nil {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
@@ -288,25 +276,27 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Expecting format webhooks/<id>", http.StatusBadRequest)
 			return
 		}
+		//if Id provided
 		if parts[4] != "" {
 			id, err := strconv.Atoi(parts[4])
 			if err != nil {
-				http.Error(w, "Could not turn id into a integer", http.StatusBadRequest)
+
 				return
 			}
-			doc, err := firedb.Client.Collection("webhooks").Doc(strconv.Itoa(id)).Get(firedb.Ctx)
+			doc, err := firedb.Client.Collection(globals.WebhookF).Doc(strconv.Itoa(id)).Get(firedb.Ctx)
 			if err != nil {
+				http.Error(w, "Could not find ID", http.StatusBadRequest)
 				fmt.Println(err)
 				return
 			}
 			m := doc.Data()
 			//Create and Encode the struct
-			var event, time string = fmt.Sprint(m["Event"]), fmt.Sprint(m["Time"])
+			var event, time string = fmt.Sprint(m[globals.EventF]), fmt.Sprint(m[globals.TimeF])
 			json.NewEncoder(w).Encode(WebhookGet{id, event, time})
 			return
 		}
 		// For now just return all webhooks, don't respond to specific resource requests
-		iter := firedb.Client.Collection("webhooks").Documents(firedb.Ctx)
+		iter := firedb.Client.Collection(globals.WebhookF).Documents(firedb.Ctx)
 		var webhooks []WebhookGet
 		for {
 			doc, err := iter.Next()
@@ -318,7 +308,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 			m := doc.Data()
-			var id, event, time string = fmt.Sprint(m["ID"]), fmt.Sprint(m["Event"]), fmt.Sprint(m["Time"])
+			var id, event, time string = fmt.Sprint(m[globals.IDF]), fmt.Sprint(m[globals.EventF]), fmt.Sprint(m[globals.TimeF])
 			wid, _ := strconv.Atoi(id)
 			webhooks = append(webhooks, WebhookGet{wid, event, time})
 
@@ -329,6 +319,35 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(webhooks[1:])
 	case http.MethodDelete:
 		//TODO: Do deleting stuff
+		var delID int
+		ok, err := GetPayload(r, &delID)
+		if err != nil {
+			http.Error(w, "Invalid Body", http.StatusBadRequest)
+		}
+		//We did not get ID in body
+		if !ok {
+			parts := strings.Split(r.URL.Path, "/")
+			//We will now see if it was part of the request
+			if parts[4] != "" {
+				delID, err = strconv.Atoi(parts[4])
+				if err != nil {
+					http.Error(w, "Could not turn id into a integer", http.StatusBadRequest)
+					return
+				}
+			} else {
+				http.Error(w, "No form of resource ID provided", http.StatusBadRequest)
+				return
+			}
+		}
+		if delID == 0 {
+			http.Error(w, "Failed to find resource ID", http.StatusBadRequest)
+			return
+		}
+		_, err = firedb.Client.Collection(globals.WebhookF).Doc(strconv.Itoa(delID)).Delete(firedb.Ctx)
+		if err != nil {
+			http.Error(w, "Could not Delete the resource", http.StatusInternalServerError)
+			return
+		}
 	default:
 		http.Error(w, "Invalid method "+r.Method, http.StatusBadRequest)
 	}
