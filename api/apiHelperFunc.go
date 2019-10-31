@@ -47,7 +47,7 @@ func activateWebhook(event globals.EventMsg, params []string) error {
 		if err != nil {
 			//If we fail we just move on
 			continue
-			/*We ignore this error becuase
+			/*We ignore this error because
 			There are other webhooks that need to be called
 			And we don't know who's fault it is*/
 		}
@@ -411,4 +411,23 @@ func EventOK(event string) bool {
 	default:
 		return false
 	}
+}
+
+//GetPayload get a payload from body
+//Returns error if failed, and a bool that represent if v got filled or not
+func GetPayload(r *http.Request, v interface{}) (bool, error) {
+	fmt.Println("THE BODY: ", r.Body)
+
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		return false, err
+	}
+	if len(body) > 0 {
+		err = json.Unmarshal(body, &v)
+		if err != nil {
+			return false, err
+		}
+		return true, err
+	}
+	return false, nil
 }
