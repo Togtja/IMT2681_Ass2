@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"time"
 
@@ -27,17 +28,13 @@ func ShouldFileCache(filename string, dir string) (globals.FileMsg, *os.File) {
 		fmt.Println(err)
 		return globals.Error, nil
 	}
-	mtime := info.ModTime()
-	timenow := time.Now()
-	fmt.Println("CHecking dates on", path)
-	fmt.Println("Is", timenow.Sub(mtime).Hours(), "larger than", 24, "?")
-	//Does not care for timezones btw
-	if timenow.Sub(mtime).Hours() > 24 {
+
+	if fileAge(path, info, 24) {
 		fmt.Println("Cache is old, Run Update")
 		file.Close() //A new file will be created
-		status = DeleteFile(filename, dir)
+		status := DeleteFile(path)
 		if status == globals.Deleted {
-			return simpleCreateFile(filename, dir)
+			return simpleCreateFile(path)
 		}
 		return status, nil
 	}
@@ -81,8 +78,7 @@ func CacheStruct(file *os.File, v interface{}) {
 }
 
 //FileExist Sees if file exist, if it does return it
-func FileExist(filename string, dir string) *os.File {
-	path := dir + "/" + filename
+func FileExist(path string) *os.File {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil
@@ -102,8 +98,7 @@ func ReadFile(file *os.File, v interface{}) error {
 }
 
 //DeleteFile Given a filename and dir
-func DeleteFile(filename string, dir string) globals.FileMsg {
-	path := dir + "/" + filename
+func DeleteFile(path string) globals.FileMsg {
 	err := os.Remove(path)
 	if err != nil {
 		fmt.Println(err)
@@ -113,12 +108,77 @@ func DeleteFile(filename string, dir string) globals.FileMsg {
 }
 
 //Does not to all the cheking that CreateFile does
-func simpleCreateFile(filename string, dir string) (globals.FileMsg, *os.File) {
-	path := dir + "/" + filename
+func simpleCreateFile(path string) (globals.FileMsg, *os.File) {
 	file, err := os.Create(path)
 	if err != nil {
 		fmt.Println(err)
 		return globals.Error, nil
 	}
 	return globals.OldRenew, file
+}
+
+//CleanUp Goes through all files in dir and delete files that are older than time
+//Also include semi optional publicFile which should be the public file, and will not be cleaned
+func CleanUp(dir string, age float64, publicFile string) {
+	files, err := ioutil.ReadDir(dir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, f := range files {
+		path := dir + "/" + f.Name()
+		if f.Name() == publicFile {
+			continue
+		}
+		if fileAge(path, f, age) {
+			DeleteFile(path)
+		}
+	}
+}
+
+//CleanUpPrivateAll Cleans Everything older than age except public files
+func CleanUpPrivateAll(age float64) {
+	fmt.Println("Running Cleanup!")
+	CleanUp(globals.COMMITDIR, age, globals.PUBLIC+globals.COMMITFILE)
+	CleanUp(globals.LANGDIR, age, globals.PUBLIC+globals.LANGFILE)
+	CleanUp(globals.PROJIDDIR, age, globals.PUBLIC+globals.PROJIDFILE)
+}
+
+//CleanUpAll Cleans Everything older than age including public files
+func CleanUpAll(age float64) {
+	fmt.Println("Running Cleanup!")
+	CleanUp(globals.COMMITDIR, age, "")
+	CleanUp(globals.LANGDIR, age, "")
+	CleanUp(globals.PROJIDDIR, age, "")
+}
+
+//FileAge checks the age of the file(info) is hours older that age
+func fileAge(path string, info os.FileInfo, age float64) bool {
+	timenow := time.Now()
+	mtime := info.ModTime()
+	fmt.Println("Checking dates on", path)
+	fmt.Println("Is", timenow.Sub(mtime).Hours(), "larger than", age, "?")
+	//Does not care for timezones btw
+	if timenow.Sub(mtime).Hours() > age {
+		return true
+	}
+	return false
+}
+
+//CleanUpInterval cleans file ever age hour, checking if file is fileage old
+func CleanUpInterval(age float64, fileage float64) {
+	ticker := time.NewTicker(time.Duration(age) * time.Hour)
+	//can be closed by running close(quit)
+	quit := make(chan struct{})
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				CleanUpPrivateAll(fileage)
+			case <-quit:
+				ticker.Stop()
+				return
+			}
+		}
+	}()
 }

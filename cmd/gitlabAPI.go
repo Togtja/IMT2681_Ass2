@@ -7,10 +7,14 @@ import (
 	"os"
 
 	"RESTGvkGitLab/api"
+	"RESTGvkGitLab/caching"
 	"RESTGvkGitLab/firedb"
 )
 
 func main() {
+	fmt.Println("Setting up a cleanup interval")
+	//Deletes files that are older than 24 hours every 72 hours
+	caching.CleanUpInterval(72, 24)
 	fmt.Println("Starting application:")
 	firedb.InitDataBase()
 	port := os.Getenv("PORT")
