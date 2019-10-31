@@ -8,7 +8,7 @@ import (
 type FileMsg int
 
 const (
-	//Error an error occured
+	//Error an error occurred
 	Error FileMsg = 0
 	//OldRenew The file did exist but is now recreated due to age
 	OldRenew FileMsg = 1
@@ -49,29 +49,32 @@ const GITAPI string = "https://git.gvk.idi.ntnu.no/api/v4/"
 //GITREPO used for repo calls
 const GITREPO string = "/repository/commits/"
 
-//LANGQ the query used to find programmig languges
+//LANGQ the query used to find programmig languages
 const LANGQ string = "/languages/"
 
 //PROJQ the query used to find projects
 const PROJQ string = "projects/"
 
+//APIFILES is a sub folder where all files get stored
+const APIFILES string = "API_Files/"
+
 //COMMITFILE is the file name where we store the repos and commits
-const COMMITFILE string = "_RepoAndCommits.json"
+const COMMITFILE string = "_commits.json"
 
 //COMMITDIR is the directory it is stores the commit results
-const COMMITDIR string = "commitDir"
+const COMMITDIR string = APIFILES + "commits"
 
 //PROJIDFILE ProjectIDFIle is a json file of all project IDs
 const PROJIDFILE string = "_project.json"
 
 //PROJIDDIR directory where the project files will be stored
-const PROJIDDIR string = "projectsIDDir"
+const PROJIDDIR string = APIFILES + "projects"
 
-//LANGFILE the file name we store the languges data
-const LANGFILE string = "_languges.Json"
+//LANGFILE the file name we store the languages data
+const LANGFILE string = "_languages.Json"
 
 //LANGDIR the directory where we store the
-const LANGDIR string = "lang"
+const LANGDIR string = APIFILES + "languages"
 
 //EventMsg are an "enum" for Post request event
 type EventMsg string
