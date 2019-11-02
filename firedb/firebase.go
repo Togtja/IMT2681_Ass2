@@ -28,10 +28,11 @@ func init() {
 	Client, err = app.Firestore(Ctx)
 	if err != nil {
 		fmt.Println("error initializing app:", err)
+		return
 	}
-	fmt.Println(Client)
-
 }
+
+//InitDataBase does
 func InitDataBase() {
 	fmt.Println("Database Init finished")
 }
