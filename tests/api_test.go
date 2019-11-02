@@ -73,7 +73,8 @@ func TestLangHandler(t *testing.T) {
 
 }
 
-func TesLangHandlerNotImplemented(t *testing.T) {
+//Test that the correct methods are implemented
+func TestLangHandlerNotImplemented(t *testing.T) {
 	onlyGetRequest(t, "/repocheck/v1/languages/")
 }
 
