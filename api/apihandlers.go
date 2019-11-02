@@ -16,6 +16,18 @@ import (
 	"RESTGvkGitLab/firedb"
 )
 
+//SetupHandlers for easier test
+func SetupHandlers() *http.ServeMux {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", NilHandler)
+	mux.HandleFunc("/repocheck/v1/commits/", CommitsHandler)
+	mux.HandleFunc("/repocheck/v1/languages/", LangHandler)
+	mux.HandleFunc("/repocheck/v1/issues/", IssueHandler)
+	mux.HandleFunc("/repocheck/v1/status/", StatusHandler)
+	mux.HandleFunc("/repocheck/v1/webhooks/", WebhookHandler)
+	return mux
+}
+
 //NilHandler throws a Bad Request
 func NilHandler(w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Invalid request", http.StatusBadRequest)
