@@ -123,3 +123,15 @@ const (
 	TimeF    string = "Time"
 	URLF     string = "URL"
 )
+
+/****************
+Caching variables:
+*****************/
+
+//DeleteAge if they are older that this, we delete the files (in hours)
+var DeleteAge float64 = 24
+
+//DeleteInterval how often we check of the age (in hours)
+var DeleteInterval float64 = 72
+
+/*The only reason they are not const is so I can change it afterwards*/

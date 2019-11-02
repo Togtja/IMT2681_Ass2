@@ -29,7 +29,7 @@ func ShouldFileCache(filename string, dir string) (globals.FileMsg, *os.File) {
 		return globals.Error, nil
 	}
 
-	if fileAge(path, info, 24) {
+	if fileAge(path, info, globals.DeleteAge) {
 		fmt.Println("Cache is old, Run Update")
 		file.Close() //A new file will be created
 		status := DeleteFile(path)
@@ -154,6 +154,10 @@ func CleanUpAll(age float64) {
 
 //FileAge checks the age of the file(info) is hours older that age
 func fileAge(path string, info os.FileInfo, age float64) bool {
+	//No need to check if older
+	if age == -1 {
+		return false
+	}
 	timenow := time.Now()
 	mtime := info.ModTime()
 	fmt.Println("Checking dates on", path)
