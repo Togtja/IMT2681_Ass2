@@ -416,9 +416,12 @@ func EventOK(event string) bool {
 
 //GetPayload get a payload from body
 //Returns error if failed, and a bool that represent if v got filled or not
+//So false, nil means that the payload is empty
 func GetPayload(r *http.Request, v interface{}) (bool, error) {
 	fmt.Println("THE BODY: ", r.Body)
-
+	if r.Body == nil {
+		return false, nil
+	}
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return false, err
