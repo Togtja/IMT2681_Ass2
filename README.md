@@ -12,13 +12,7 @@
 
 ## Todos:
 
-Delete authorization cache after a certain amount of hours/days.
-
-Delete method for webhooks.
-
-Write test.
-
-Figure out what a get payload is.
+Write test (WIP).
 
 Write message to user when caching:
 ```
@@ -237,9 +231,9 @@ Upon being triggered in the endpoint associated with the event the webhook is re
 }
 ```
 
-## Deletion (Todo)
+## Deletion
 
-To delete a webhook, send a DELETE request to the URL identifying the webhook (resource id) to be deleted.
+To delete a webhook, send a DELETE request to the Webhook endpoint `/repocheck/v1/webhooks/ID` or as a Payload identifying the webhook (resource id) to be deleted.
 
 # Deviation/Changes from assignment requirements
 
@@ -249,7 +243,7 @@ Specified Languages payload to be
     "projects": [ "project1", "project2", ... ]
 }
 ```
-and that project names assume 'name' field in https://git.gvk.idi.ntnu.no/api/v4/projects
+and that project names assume 'path_with_namespace' field in https://git.gvk.idi.ntnu.no/api/v4/projects
 
 instead of just
 ```
@@ -275,6 +269,7 @@ I made some extra features, that should not go against the specification. Though
 ## Caching
 
 I cache the API calls, so that the next api calls happen quickly. They are stored in a folder called `API_Files`, under 3 sub folders `commits`, `projects` and `languages` (All of this is found in Globals). If you authenticate yourself, you get your own files, at the cost of the first authentication it takes some time to do all the API calls to get every repository you can see. Your authentication file will eventually be deleted, currently I check every 72 hours if any authenticated files are older than 24 hours old.
+Issues does not use Caching as the user themselves provide the projects, and thus causes a minimal strain on the API
 
 ## Multi-Threading 
 I employ multi-threading to do the API calls, this is to speed up calls, seeing as they are the slowest part of my code. It is especially important because I am cashing a lot of the data, so users might expect long load time for a simple call if nothing has been cached, I try to mitigate this the best of my abilities with multi-threading
