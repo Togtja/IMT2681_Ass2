@@ -273,3 +273,16 @@ Issues does not use Caching as the user themselves provide the projects, and thu
 
 ## Multi-Threading 
 I employ multi-threading to do the API calls, this is to speed up calls, seeing as they are the slowest part of my code. It is especially important because I am cashing a lot of the data, so users might expect long load time for a simple call if nothing has been cached, I try to mitigate this the best of my abilities with multi-threading
+
+# Tests 
+
+This chapter of the readme was added after the deadline, however the actual tests where not, just this update to the read me.
+
+You need FireStore database to work to successfully run the tests. and some test files that I forgot to undo from git ignore. So I uploaded an internal project on gitlab with my service key and test files. Just drop them in side the `tests` folder and run `go test ./tests -coverage` for coverage 
+
+If you want to deploy it on your own system, you need a `servicekey.json` that is the key to Firebase, my key is found it the test repository. Just copy the service key inside the folder called firedb
+
+the test repository https://git.gvk.idi.ntnu.no/tomashb/testfiles
+I added them there as you need a valid NTNU account to access it
+
+Again these files is just the test data needed to run the tests, and not the actual tests. And all of this was completed before the assignment. I just remembered that all .json files was in .ignore
