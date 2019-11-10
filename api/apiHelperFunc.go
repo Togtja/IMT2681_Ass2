@@ -453,3 +453,9 @@ func findIssues(projID string, auth string,
 	}
 	return issues
 }
+func encodeJSON(w http.ResponseWriter, v interface{}) {
+	err := json.NewEncoder(w).Encode(v)
+	if err != nil {
+		http.Error(w, "Failed to encode due to "+err.Error(), http.StatusInternalServerError)
+	}
+}

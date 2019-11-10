@@ -65,7 +65,7 @@ func CommitsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	repo.Repos = repo.Repos[offset : limit+offset]
 	http.Header.Add(w.Header(), "content-type", "application/json")
-	json.NewEncoder(w).Encode(repo)
+	encodeJSON(w, repo)
 
 	param := []string{strconv.FormatInt(limit, 10), strconv.FormatInt(offset, 10), strconv.FormatBool(repo.Auth)}
 	err := activateWebhook(globals.CommitE, param)
@@ -131,7 +131,8 @@ func LangHandler(w http.ResponseWriter, r *http.Request) {
 	lang.Language = lang.Language[offset : limit+offset]
 
 	http.Header.Add(w.Header(), "content-type", "application/json")
-	json.NewEncoder(w).Encode(lang)
+
+	encodeJSON(w, lang)
 	//I decide to send the actual limit the user get and not what it asks for
 	param := []string{strconv.FormatInt(limit, 10), strconv.FormatInt(offset, 10), strconv.FormatBool(lang.Auth)}
 	err = activateWebhook(globals.LanguagesE, param)
@@ -181,14 +182,14 @@ func IssueHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Could not find issues by users in the project", http.StatusBadRequest)
 			return
 		}
-		json.NewEncoder(w).Encode(users)
+		encodeJSON(w, users)
 	} else if _type == "labels" {
 		labels := findLabelsInIssues(issues, authBool)
 		if len(labels.Labels) == 0 {
 			http.Error(w, "Could not find issues in the project", http.StatusBadRequest)
 			return
 		}
-		json.NewEncoder(w).Encode(labels)
+		encodeJSON(w, labels)
 	} else {
 		http.Error(w, "Invalid type", http.StatusBadRequest)
 		return
@@ -225,7 +226,7 @@ func StatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	http.Header.Add(w.Header(), "content-type", "application/json")
 	diag := Status{gitlab.StatusCode, dbStatus, uptimeString, globals.Version}
-	json.NewEncoder(w).Encode(diag)
+	encodeJSON(w, diag)
 	var param []string //Empty parameters, as Status does not take in parameters
 	err = activateWebhook(globals.StatusE, param)
 	if err != nil {
@@ -269,6 +270,10 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		sort.Ints(ids)
 		newid = 1
 		for _, id := range ids {
+			//id 0 is reserved
+			if id == 0 {
+				continue
+			}
 			if id == newid {
 				newid++
 			} else {
@@ -293,7 +298,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Bad request", http.StatusBadRequest)
 			return
 		}
-		json.NewEncoder(w).Encode(webhook)
+		encodeJSON(w, webhook)
 
 	case http.MethodGet:
 		http.Header.Add(w.Header(), "content-type", "application/json")
@@ -318,7 +323,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 			m := doc.Data()
 			//Create and Encode the struct
 			var event, time string = fmt.Sprint(m[globals.EventF]), fmt.Sprint(m[globals.TimeF])
-			json.NewEncoder(w).Encode(WebhookGet{id, event, time})
+			encodeJSON(w, WebhookGet{id, event, time})
 			return
 		}
 		// For now just return all webhooks, don't respond to specific resource requests
@@ -342,7 +347,7 @@ func WebhookHandler(w http.ResponseWriter, r *http.Request) {
 		sort.SliceStable(webhooks, func(i, j int) bool {
 			return webhooks[i].ID < webhooks[j].ID
 		})
-		json.NewEncoder(w).Encode(webhooks[1:])
+		encodeJSON(w, webhooks[1:])
 	case http.MethodDelete:
 		var delID int
 		ok, err := GetPayload(r, &delID)
