@@ -26,6 +26,7 @@ func ShouldFileCache(filename string, dir string) (globals.FileMsg, *os.File) {
 	info, err := os.Stat(path)
 	if err != nil {
 		fmt.Println(err)
+		file.Close()
 		return globals.Error, nil
 	}
 
@@ -53,14 +54,16 @@ func CreateFile(filename string, dir string) (globals.FileMsg, *os.File) {
 			err = os.MkdirAll(dir, 0755)
 			if err != nil {
 				fmt.Println("Failed to create directory")
+				file.Close()
 				return globals.DirFail, nil
 			}
 		}
 		//Create the file
+		file.Close()
 		fmt.Println("trying to create", path)
 		file, err = os.Create(path)
 		if err != nil {
-
+			file.Close()
 			return globals.Error, nil
 		}
 		fmt.Println(path, "created")
