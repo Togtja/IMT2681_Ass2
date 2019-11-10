@@ -1,3 +1,17 @@
+# After Deadline Branch
+
+I started this branch to fix bugs pointed out in the review phase
+
+## Fixed bugs
+
+A bug regarding delegation of web hook ids, caused after the db status was added, and created an ID 0 for status check, however the algorithm for webhook ID delegation assumed ID started on 1, so it would not work.
+
+A lot of the errors that json.Encode throws was not handled due to me not knowing they returned an error, however that should now all be handled
+
+Tried to fix a bug where i got `2019/11/10 17:56:01 http: Accept error: accept tcp [::]:8080: accept4: too many open files; retrying in 1s` on the sever side and `2019/11/10 17:56:01 http: Accept error: accept tcp [::]:8080: accept4: too many open files; retrying in 1s` sent to users. I have assumed it was because I failed to close some files, if that is the case, it should be fixed now. 
+If not I have no clue what the issue is
+
+
 # Web Service Specification
 
 ## Implemented endpoints
@@ -32,7 +46,7 @@ This endpoint will return the repositories with the highest numbers of commits, 
 
 The endpoint accepts GET requests with an empty payload.
 
-If not specified, the parameter `limit` returns 5 repositories, 
+If not specified, the parameter `limit` returns 5 repositories, or if it is less then or equals to 0
 
 If `auth` parameter is not specified, it will return publicly available repositories
 
